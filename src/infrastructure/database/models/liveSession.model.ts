@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { ILiveSession, LiveSessionStatus } from "../../../domain/interfaces/liveSession.interface";
+import { ILiveSession, LiveSessionStatus } from "../../../domain/liveSession/liveSession.interface";
 
 const liveSessionSchema = new Schema<ILiveSession>(
   {

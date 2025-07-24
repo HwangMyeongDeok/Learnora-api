@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
-import { IEnrollment } from "./enrollment.interface";
 import { ILecture } from "../lecture/lecture.interface";
+import { IEnrollment } from "../enrollment/enrollment.interface";
 
 export interface IProgress {
   _id?: Types.ObjectId;
@@ -9,4 +9,6 @@ export interface IProgress {
   completed: boolean;
   completedAt?: Date;
   score?: number;
+  durationWatched?: number;
+  percent?: number;
 }

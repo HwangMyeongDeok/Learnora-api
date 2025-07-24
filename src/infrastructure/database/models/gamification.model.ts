@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { IBadge, IGamification } from "../../../domain/interfaces/gamification.interface";
+import { IBadge, IGamification } from "../../../domain/gamification/gamification.interface";
 
 const badgeSchema = new Schema<IBadge>({
   name: { type: String, required: true },

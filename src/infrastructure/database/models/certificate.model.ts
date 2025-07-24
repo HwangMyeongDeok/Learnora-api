@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { ICertificate } from "./certificate.interface";
+import { ICertificate } from "../../../domain/certificate/certificate.interface";
 
 const certificateSchema = new Schema<ICertificate>(
   {
@@ -8,7 +8,7 @@ const certificateSchema = new Schema<ICertificate>(
     issuedAt: { type: Date, default: Date.now },
     certificateUrl: { type: String, required: true },
   },
-  { timestamps: false }
+  { timestamps: true }
 );
 
 export const Certificate = model<ICertificate>("Certificate", certificateSchema);

@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { EnrollmentStatus, IEnrollment } from "../../../domain/interfaces/enrollment.interface";
+import { EnrollmentStatus, IEnrollment } from "../../../domain/enrollment/enrollment.interface";
 
 const enrollmentSchema = new Schema<IEnrollment>(
   {

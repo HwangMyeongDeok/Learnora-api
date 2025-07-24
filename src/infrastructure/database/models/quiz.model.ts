@@ -1,12 +1,15 @@
 import { Schema, model } from "mongoose";
-import { IQuiz, IQuestion } from "../../../domain/interfaces/quiz.interface";
+import { IQuiz, IQuestion } from "../../../domain/quiz/quiz.interface";
 
-const questionSchema = new Schema<IQuestion>({
-  question: { type: String, required: true },
-  options: [{ type: String, required: true }],
-  correctAnswer: { type: Number, required: true },
-  explanation: { type: String },
-});
+const questionSchema = new Schema<IQuestion>(
+  {
+    question: { type: String, required: true },
+    options: [{ type: String, required: true }],
+    correctAnswer: [{ type: Number, required: true }],
+    explanation: { type: String },
+  },
+  { timestamps: true, _id: false }
+);
 
 const quizSchema = new Schema<IQuiz>(
   {

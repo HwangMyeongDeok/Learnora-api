@@ -4,7 +4,7 @@ import { UpdateUserUseCase } from "../../application/user/update-user.usecase";
 import { DeleteUserUseCase } from "../../application/user/delete-user.usecase";
 import { CreateUserUseCase } from "../../application/user/create-user.usecase";
 import { UserRepository } from "../../infrastructure/database/repositories/user.repository";
-import { ErrorHandler } from "../../shared/ErrorHandler";
+import ErrorHandler from "../../middleware/ErrorHandler";
 
 const userRepo = new UserRepository();
 

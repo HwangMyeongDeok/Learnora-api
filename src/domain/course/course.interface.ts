@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 import { IUser } from "../user/user.interface";
 import { ISection } from "../section/section.interface";
-import { ICategory } from "../../domain/interfaces/category.interface";
+import { ICategory } from "../category/category.interface";
 
 export enum CourseLevel {
   BEGINNER = "beginner",
@@ -17,6 +17,7 @@ export enum CourseStatus {
 
 export interface ICourse {
   _id?: Types.ObjectId;
+  slug: string;
   title: string;
   description: string;
   instructor: Types.ObjectId | IUser;

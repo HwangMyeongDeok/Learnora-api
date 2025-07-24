@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { ISection } from "../../../domain/interfaces/section.interface";
+import { ISection } from "../../../domain/section/section.interface";
 
 const sectionSchema = new Schema<ISection>(
   {

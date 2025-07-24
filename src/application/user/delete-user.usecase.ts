@@ -1,5 +1,5 @@
 import { IUserRepository } from "../../domain/user/user.repository.interface";
-import { ErrorHandler } from "../../shared/ErrorHandler";
+import ErrorHandler from "../../middleware/ErrorHandler";
 
 export class DeleteUserUseCase {
   constructor(private readonly userRepository: IUserRepository) {}

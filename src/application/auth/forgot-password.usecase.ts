@@ -1,5 +1,5 @@
 import { IUserRepository } from "../../domain/user/user.repository.interface";
-import ErrorHandler from "../../shared/ErrorHandler";
+import ErrorHandler from "../../middleware/ErrorHandler";
 
 export class ForgotPasswordUseCase {
   constructor(private readonly userRepo: IUserRepository) {}
@@ -9,7 +9,6 @@ export class ForgotPasswordUseCase {
     if (!user) throw new ErrorHandler("Email not found", 404);
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
 
     return otp;
   }

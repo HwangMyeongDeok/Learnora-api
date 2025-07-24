@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { ILesson, LessonType } from "../../../domain/interfaces/lesson.interface";
+import { ILesson, LessonType } from "../../../domain/lesson/lesson.interface";
 
 const lessonSchema = new Schema<ILesson>(
   {

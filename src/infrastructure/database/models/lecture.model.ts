@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { ILecture, LectureType } from "../../../domain/interfaces/lecture.interface";
+import { ILecture, LectureType } from "../../../domain/lecture/lecture.interface";
 
 const lectureSchema = new Schema<ILecture>(
   {

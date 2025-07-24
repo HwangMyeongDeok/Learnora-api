@@ -3,8 +3,8 @@ import { IUserRepository } from "../../domain/user/user.repository.interface";
 import { UserResponseDto } from "./dtos/user-response.dto";
 import { plainToInstance } from "class-transformer";
 import { hash } from "bcryptjs";
-import  ErrorHandler  from "../../shared/ErrorHandler";
 import { RegisterDto } from "../auth/dtos/register.dto";
+import ErrorHandler from "../../middleware/ErrorHandler";
 
 export class CreateUserUseCase {
   constructor(private readonly userRepository: IUserRepository) {}

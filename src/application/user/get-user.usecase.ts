@@ -1,7 +1,7 @@
 import { IUserRepository } from "../../domain/user/user.repository.interface";
+import ErrorHandler from "../../middleware/ErrorHandler";
 import { UserResponseDto } from "./dtos/user-response.dto";
 import { plainToInstance } from "class-transformer";
-import { ErrorHandler } from "../../shared/ErrorHandler";
 
 export class GetUserUseCase {
   constructor(private readonly userRepository: IUserRepository) {}
