@@ -5,7 +5,7 @@ export class UpdateQuizDto extends CreateQuizDto {
   title!: string;
 
   @IsOptional()
-  questions?: any;
+  questions!: any;
 
   @IsOptional()
   timeLimit?: number;

@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
-import { IUser } from "./user.interface";
 import { ICourse } from "../course/course.interface";
+import { IUser } from "../user/user.interface";
 
 export interface IReview {
   _id?: Types.ObjectId;
