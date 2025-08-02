@@ -1,4 +1,4 @@
-import { ILectureRepository } from "../../domain/lecture/lecture.repository";
+import { ILectureRepository } from "../../domain/lecture/lecture.repository.interface";
 
 export class GetLecturesBySectionUseCase {
   constructor(private repo: ILectureRepository) {}

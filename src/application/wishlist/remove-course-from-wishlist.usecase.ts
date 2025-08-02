@@ -1,4 +1,4 @@
-import { IWishlistRepository } from "../../domain/wishlist/wishlist.repository";
+import { IWishlistRepository } from "../../domain/wishlist/wishlist.repository.interface";
 
 export class RemoveCourseFromWishlistUseCase {
   constructor(private repo: IWishlistRepository) {}

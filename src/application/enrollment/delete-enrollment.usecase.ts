@@ -1,4 +1,4 @@
-import { IEnrollmentRepository } from "../../domain/enrollment/enrollment.repository";
+import { IEnrollmentRepository } from "../../domain/enrollment/enrollment.repository.interface";
 
 export class DeleteEnrollmentUseCase {
   constructor(private repo: IEnrollmentRepository) {}

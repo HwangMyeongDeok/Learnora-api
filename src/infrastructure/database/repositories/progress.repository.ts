@@ -1,5 +1,5 @@
 import { IProgress } from "../../../domain/progress/progress.interface";
-import { IProgressRepository } from "../../../domain/progress/progress.repository";
+import { IProgressRepository } from "../../../domain/progress/progress.repository.interface";
 import { Progress } from "../models/progress.model";
 
 export class ProgressRepository implements IProgressRepository {

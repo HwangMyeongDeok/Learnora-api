@@ -1,5 +1,5 @@
 import { ILesson } from "../../domain/lesson/lesson.interface";
-import { ILessonRepository } from "../../domain/lesson/lesson.repository";
+import { ILessonRepository } from "../../domain/lesson/lesson.repository.interface";
 
 export class CreateLessonUseCase {
   constructor(private repo: ILessonRepository) {}

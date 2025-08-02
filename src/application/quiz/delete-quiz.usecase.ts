@@ -1,4 +1,4 @@
-import { IQuizRepository } from "../../domain/quiz/quiz.repository";
+import { IQuizRepository } from "../../domain/quiz/quiz.repository.interface";
 
 export class DeleteQuizUseCase {
   constructor(private repo: IQuizRepository) {}

@@ -1,4 +1,4 @@
-import { INotificationRepository } from "../../domain/notification/notification.repository";
+import { INotificationRepository } from "../../domain/notification/notification.repository.interface";
 
 export class GetUserNotificationsUseCase {
   constructor(private repo: INotificationRepository) {}

@@ -1,4 +1,4 @@
-import { ICertificateRepository } from "../../domain/certificate/certificate.repository";
+import { ICertificateRepository } from "../../domain/certificate/certificate.repository.interface";
 
 export class GetCertificatesByCourseUseCase {
   constructor(private repo: ICertificateRepository) {}

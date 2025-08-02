@@ -1,5 +1,5 @@
 import { ILiveSession } from "../../domain/liveSession/liveSession.interface";
-import { ILiveSessionRepository } from "../../domain/liveSession/liveSession.repository";
+import { ILiveSessionRepository } from "../../domain/liveSession/liveSession.repository.interface";
 
 export class UpdateLiveSessionUseCase {
   constructor(private repo: ILiveSessionRepository) {}

@@ -1,6 +1,6 @@
 import { Notification } from "../models/notification.model";
 import { INotification } from "../../../domain/notification/notification.interface";
-import { INotificationRepository } from "../../../domain/notification/notification.repository";
+import { INotificationRepository } from "../../../domain/notification/notification.repository.interface";
 
 export class NotificationRepository implements INotificationRepository {
   async create(data: Partial<INotification>): Promise<INotification> {

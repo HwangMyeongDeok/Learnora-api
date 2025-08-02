@@ -1,5 +1,5 @@
 import { IEnrollment } from "../../../domain/enrollment/enrollment.interface";
-import { IEnrollmentRepository } from "../../../domain/enrollment/enrollment.repository";
+import { IEnrollmentRepository } from "../../../domain/enrollment/enrollment.repository.interface";
 import { Enrollment } from "../models/enrollment.model";
 
 

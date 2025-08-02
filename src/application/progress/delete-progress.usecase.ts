@@ -1,4 +1,4 @@
-import { IProgressRepository } from "../../domain/progress/progress.repository";
+import { IProgressRepository } from "../../domain/progress/progress.repository.interface";
 
 export class DeleteProgressUseCase {
   constructor(private repo: IProgressRepository) {}

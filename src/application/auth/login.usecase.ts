@@ -2,7 +2,7 @@ import { LoginDto } from "./dtos/login.dto";
 import { IUserRepository } from "../../domain/user/user.repository.interface";
 import jwt from "jsonwebtoken";
 import * as bcrypt from "bcrypt";
-import { IAuthRepository } from "../../domain/auth/auth.repository";
+import { IAuthRepository } from "../../domain/auth/auth.repository.interface";
 import ErrorHandler from "../../middleware/ErrorHandler";
 
 export class LoginUseCase {

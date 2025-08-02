@@ -1,4 +1,4 @@
-import { ILessonRepository } from "../../domain/lesson/lesson.repository";
+import { ILessonRepository } from "../../domain/lesson/lesson.repository.interface";
 
 export class DeleteLessonUseCase {
   constructor(private repo: ILessonRepository) {}

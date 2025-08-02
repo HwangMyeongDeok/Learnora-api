@@ -1,5 +1,5 @@
 import { IComment } from "../../domain/comment/comment.interface";
-import { ICommentRepository } from "../../domain/comment/comment.repository";
+import { ICommentRepository } from "../../domain/comment/comment.repository.interface";
 
 export class ReplyCommentUseCase {
   constructor(private repo: ICommentRepository) {}

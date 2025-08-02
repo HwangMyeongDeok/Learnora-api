@@ -1,4 +1,4 @@
-import { IAuthRepository } from "../../domain/auth/auth.repository";
+import { IAuthRepository } from "../../domain/auth/auth.repository.interface";
 
 export class VerifyOtpUseCase {
   constructor(private readonly authRepo: IAuthRepository) {}

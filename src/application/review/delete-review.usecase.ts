@@ -1,4 +1,4 @@
-import { IReviewRepository } from "../../domain/review/review.repository";
+import { IReviewRepository } from "../../domain/review/review.repository.interface";
 
 export class DeleteReviewUseCase {
   constructor(private repo: IReviewRepository) {}

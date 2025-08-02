@@ -1,5 +1,5 @@
 import { IProgress } from "../../domain/progress/progress.interface";
-import { IProgressRepository } from "../../domain/progress/progress.repository";
+import { IProgressRepository } from "../../domain/progress/progress.repository.interface";
 export class CreateProgressUseCase {
   constructor(private repo: IProgressRepository) {}
 

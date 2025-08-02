@@ -1,5 +1,5 @@
 import { ILesson } from "../../../domain/lesson/lesson.interface";
-import { ILessonRepository } from "../../../domain/lesson/lesson.repository";
+import { ILessonRepository } from "../../../domain/lesson/lesson.repository.interface";
 import { Lesson } from "../models/lesson.model";
 
 export class LessonRepository implements ILessonRepository {

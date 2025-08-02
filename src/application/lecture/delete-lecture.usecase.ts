@@ -1,4 +1,4 @@
-import { ILectureRepository } from "../../domain/lecture/lecture.repository";
+import { ILectureRepository } from "../../domain/lecture/lecture.repository.interface";
 
 export class DeleteLectureUseCase {
   constructor(private repo: ILectureRepository) {}

@@ -1,4 +1,4 @@
-import { IAuthRepository } from "../../../domain/auth/auth.repository";
+import { IAuthRepository } from "../../../domain/auth/auth.repository.interface";
 import { redis } from "../../config/redis";
 import { AuthModel } from "../models/auth.model";
 

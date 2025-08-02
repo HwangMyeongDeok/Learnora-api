@@ -13,6 +13,10 @@ import wishlistRoutes from "../presentation/wishlist/wishlist.route";
 import notificationRoutes from "../presentation/notification/notification.route";
 import commentRoutes from "../presentation/comment/comment.route";
 import liveSessionRoutes from "../presentation/liveSession/liveSession.route";
+import gamificationRoutes from "../presentation/gamification/gamification.route";
+import paymentRoutes from "../presentation/payment/payment.route";
+import cartRoutes from "../presentation/cart/cart.route";
+import categoryRoutes from "../presentation/category/category.route";
 
 import express from "express";
 
@@ -33,5 +37,9 @@ router.use("/wishlist", wishlistRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/comments", commentRoutes);
 router.use("/live-sessions", liveSessionRoutes);
+router.use("/gamification", gamificationRoutes);
+router.use("/payments", paymentRoutes);
+router.use("/cart", cartRoutes);
+router.use("/categories", categoryRoutes);
 
 export default router;

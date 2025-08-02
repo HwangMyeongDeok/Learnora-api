@@ -5,4 +5,5 @@ export interface ICommentRepository {
   findByLecture(lectureId: string): Promise<IComment[]>;
   delete(commentId: string): Promise<void>;
   reply(parentId: string, replyId: string): Promise<void>;
+  update(id: string, data: Partial<IComment>): Promise<IComment | null>;
 }

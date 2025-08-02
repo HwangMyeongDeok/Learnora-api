@@ -1,4 +1,4 @@
-import { ICommentRepository } from "../../domain/comment/comment.repository";
+import { ICommentRepository } from "../../domain/comment/comment.repository.interface";
 
 export class DeleteCommentUseCase {
   constructor(private repo: ICommentRepository) {}

@@ -1,5 +1,5 @@
 import { ICertificate } from "../../domain/certificate/certificate.interface";
-import { ICertificateRepository } from "../../domain/certificate/certificate.repository";
+import { ICertificateRepository } from "../../domain/certificate/certificate.repository.interface";
 
 
 export class CreateCertificateUseCase {

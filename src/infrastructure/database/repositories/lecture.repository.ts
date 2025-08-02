@@ -1,5 +1,5 @@
 import { ILecture } from "../../../domain/lecture/lecture.interface";
-import { ILectureRepository } from "../../../domain/lecture/lecture.repository";
+import { ILectureRepository } from "../../../domain/lecture/lecture.repository.interface";
 import { Lecture } from "../models/lecture.model";
 
 export class LectureRepository implements ILectureRepository {

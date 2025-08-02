@@ -4,6 +4,7 @@ import { CreateCommentUseCase } from "../../application/comment/create-comment.u
 import { GetCommentsByLectureUseCase } from "../../application/comment/get-comments-by-lecture.usecase";
 import { DeleteCommentUseCase } from "../../application/comment/delete-comment.usecase";
 import { ReplyCommentUseCase } from "../../application/comment/reply-comment.usecase";
+import { UpdateCommentUseCase } from "../../application/comment/update-comment.usecase";
 
 const repo = new CommentRepository();
 
@@ -34,4 +35,11 @@ export const replyComment = async (req: Request, res: Response) => {
     parentComment: req.params.id,
   });
   res.status(201).json(result);
+};
+
+export const updateComment = async (req: Request, res: Response) => {
+  const useCase = new UpdateCommentUseCase(repo);
+  const updated = await useCase.execute(req.params.id, req.body);
+  if (!updated) res.status(404).json({ message: "Not found" });
+  res.status(200).json(updated);
 };

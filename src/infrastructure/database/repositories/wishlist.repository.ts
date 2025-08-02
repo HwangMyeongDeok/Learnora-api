@@ -1,5 +1,5 @@
 import { IWishlist } from "../../../domain/wishlist/wishlist.interface";
-import { IWishlistRepository } from "../../../domain/wishlist/wishlist.repository";
+import { IWishlistRepository } from "../../../domain/wishlist/wishlist.repository.interface";
 import { Wishlist } from "../models/wishlist.model";
 
 export class WishlistRepository implements IWishlistRepository {

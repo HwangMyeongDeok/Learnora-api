@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { IAuthRepository } from "../../domain/auth/auth.repository";
+import { IAuthRepository } from "../../domain/auth/auth.repository.interface";
 import ErrorHandler from "../../middleware/ErrorHandler";
 
 export class RefreshTokenUseCase {
