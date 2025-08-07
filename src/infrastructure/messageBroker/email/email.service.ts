@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { EmailJobPayload } from "./email.handler";
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -6,21 +7,16 @@ const transporter = nodemailer.createTransport({
   secure: false,
   auth: {
     user: "your_email@gmail.com",
-    pass: "your_app_password",
+    pass: "your_app_password", 
   },
 });
 
-interface SendEmailPayload {
-  to: string;
-  subject: string;
-  html: string;
-}
-
-export const sendEmail = async ({ to, subject, html }: SendEmailPayload) => {
+export const sendEmail = async ({ to, subject, text, html }: EmailJobPayload) => {
   await transporter.sendMail({
     from: `"No Reply" <your_email@gmail.com>`,
     to,
     subject,
+    text,
     html,
   });
   console.log("📧 Email sent to:", to);

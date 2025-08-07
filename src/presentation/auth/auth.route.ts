@@ -16,6 +16,7 @@ import {
 import { RegisterDto } from "../../application/auth/dtos/register.dto";
 import { LoginDto } from "../../application/auth/dtos/login.dto";
 import { ChangePasswordDto } from "../../application/auth/dtos/change-password.dto";
+import { RefreshTokenDto } from "../../application/auth/dtos/refresh-token.dto";
 
 const router = Router();
 
@@ -42,7 +43,7 @@ router.post(
   catchAsyncError(changePasswordController)
 );
 
-router.post("/refresh-token", catchAsyncError(refreshTokenController));
+router.post("/refresh-token",validateMiddleware(RefreshTokenDto),catchAsyncError(refreshTokenController));
 
 router.post("/verify-otp", catchAsyncError(verifyOtpController));
 

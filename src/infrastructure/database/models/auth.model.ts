@@ -5,8 +5,9 @@ const AuthSchema = new Schema<IAuthDocument>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     token: { type: String, required: true },
-    device: { type: String },
+    deviceId: { type: String },
     ip: { type: String },
+    replacedByToken: { type: String },
     revoked: { type: Boolean, default: false },
   },
   { timestamps: true }

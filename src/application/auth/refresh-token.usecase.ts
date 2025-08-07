@@ -1,29 +1,84 @@
-import jwt from "jsonwebtoken";
+import { RefreshTokenDto } from "./dtos/refresh-token.dto";
 import { IAuthRepository } from "../../domain/auth/auth.repository.interface";
-import ErrorHandler from "../../middleware/ErrorHandler";
+import { IUserRepository } from "../../domain/user/user.repository.interface";
+import { generateTokens } from "../../infrastructure/shared/token";
 
 export class RefreshTokenUseCase {
-  constructor(private readonly authRepo: IAuthRepository) {}
+  constructor(
+    private readonly authRepo: IAuthRepository,
+    private readonly userRepo: IUserRepository
+  ) {}
 
-  async execute(refreshToken: string) {
-    try {
-      const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as {
-        userId: string;
-      };
-
-      const stored = await this.authRepo.getRefreshToken(payload.userId);
-      if (!stored || stored !== refreshToken)
-        throw new ErrorHandler("Refresh token invalid", 403);
-
-      const newAccessToken = jwt.sign(
-        { userId: payload.userId },
-        process.env.JWT_SECRET!,
-        { expiresIn: "15m" }
-      );
-
-      return { accessToken: newAccessToken };
-    } catch (err) {
-      throw new ErrorHandler("Token expired or invalid", 403);
+  async execute(
+    { refreshToken }: RefreshTokenDto,
+    ip?: string,
+    deviceId: string = "unknown"
+  ) {
+    if (!refreshToken) {
+      throw new Error("Refresh token is required");
     }
+    // Check tokenInfo in Redis
+    const tokenInfo = await this.authRepo.getRefreshTokenInfo(refreshToken);
+
+    if (tokenInfo) {
+      const { userId, deviceId: storedDeviceId } = tokenInfo;
+
+      if (storedDeviceId !== deviceId) {
+        throw new Error("Device mismatch.");
+      }
+
+      await this.authRepo.revokeTokens(userId, deviceId, refreshToken);
+
+      const user = await this.userRepo.findById(userId);
+      if (!user || !user._id) {
+        throw new Error("User not found or missing _id.");
+      }
+
+      const { accessToken, refreshToken: newRefreshToken } =
+        await generateTokens(user._id.toString(), ip, deviceId);
+      return {
+        accessToken,
+        refreshToken: newRefreshToken,
+      };
+    }
+    // Check for reused token
+    const isReused = await this.authRepo.isTokenReusedAndRevoked(refreshToken);
+    if (isReused) {
+      const reusedSession = await this.authRepo.findRefreshTokenInDB(
+        refreshToken
+      );
+      if (!reusedSession) {
+        throw new Error("Refresh token reuse detected. All sessions revoked.");
+      }
+      const userId = reusedSession.user.toString();
+      await this.authRepo.revokeAllTokens(userId);
+
+      throw new Error("Refresh token reuse detected. All sessions revoked.");
+    }
+    //Fallback DB check
+    const fallbackSession = await this.authRepo.findRefreshTokenInDB(
+      refreshToken
+    );
+    if (!fallbackSession) {
+      throw new Error("Refresh token not found.");
+    }
+
+    const userId = fallbackSession.user.toString();
+    await this.authRepo.revokeTokens(userId, deviceId);
+
+    const user = await this.userRepo.findById(userId);
+    if (!user || !user._id) {
+      throw new Error("User not found or missing _id.");
+    }
+
+    const { accessToken, refreshToken: newRefreshToken } = await generateTokens(
+      user._id.toString(),
+      ip,
+      deviceId
+    );
+    return {
+      accessToken,
+      refreshToken: newRefreshToken,
+    };
   }
 }
