@@ -1,0 +1,21 @@
+import { ICertificate } from "./certificate.interface";
+import { ICertificateRepository } from "../../domain/certificate/certificate.repository.interface";
+import { Certificate } from "./certificate.model";
+
+export class CertificateRepository implements ICertificateRepository {
+  async create(data: Partial<ICertificate>): Promise<ICertificate> {
+    return await Certificate.create(data);
+  }
+
+  async findByUser(userId: string): Promise<ICertificate[]> {
+    return await Certificate.find({ user: userId }).populate("course");
+  }
+
+  async findByCourse(courseId: string): Promise<ICertificate[]> {
+    return await Certificate.find({ course: courseId }).populate("user");
+  }
+
+  async delete(id: string): Promise<void> {
+    await Certificate.findByIdAndDelete(id);
+  }
+}

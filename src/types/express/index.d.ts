@@ -6,5 +6,6 @@ declare module "express-serve-static-core" {
       userId: string;
       role: string;
     };
+     deviceId?: string; 
   }
 }
