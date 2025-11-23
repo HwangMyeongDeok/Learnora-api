@@ -1,71 +1,64 @@
-import { IPayment } from "./payment.interface"; // Gộp interface
-import { IPaymentRepository } from "./payment.interface";
+import { IPaymentRepository, PaymentGateway, PaymentStatus } from "./payment.interface";
+import { BadRequestError, NotFoundError } from "../../core/error.response";
+import { v4 as uuidv4 } from 'uuid';
 
-// Giả sử em dùng EnrollmentService để kích hoạt khóa học sau khi thanh toán xong
-// import { EnrollmentService } from "../enrollment/enrollment.service";
+import { CourseRepository } from "../course/course.repository";
+import { EnrollmentService } from "../enrollment/enrollment.service";
 
 export class PaymentService {
   constructor(
     private readonly paymentRepo: IPaymentRepository,
-    // private readonly enrollmentService: EnrollmentService
+    private readonly courseRepo: CourseRepository,
+    private readonly enrollmentService: EnrollmentService
   ) {}
 
-  // =================================================================
-  // 1. INITIATE PAYMENT (Tạo giao dịch & Lấy link thanh toán)
-  // =================================================================
-  async createPayment(data: Partial<IPayment>) {
-    // Bước 1: Gọi API bên thứ 3 (Stripe, PayPal, VNPAY, MoMo)
-    // const gatewayResponse = await Stripe.paymentIntents.create({ ... });
-    
-    // Bước 2: Lưu vào DB với trạng thái "PENDING" (Đang chờ)
+  async createPaymentUrl(userId: string, courseId: string, gateway: PaymentGateway) {
+    const course = await this.courseRepo.findById(courseId);
+    if (!course) throw new NotFoundError("Course not found");
+
+    const { isEnrolled } = await this.enrollmentService.checkEnrollment(userId, courseId);
+    if (isEnrolled) throw new BadRequestError("You already own this course");
+
+    const fakeTransactionId = `TRX-${uuidv4()}`; 
+
     const payment = await this.paymentRepo.create({
-      ...data,
-      status: 'pending', 
-      // transactionId: gatewayResponse.id 
+        user: userId,
+        course: courseId,
+        amount: course.discountPrice || course.price, 
+        gateway: gateway,
+        transactionId: fakeTransactionId,
+        status: PaymentStatus.PENDING
     });
 
-    return payment;
+    return {
+        paymentUrl: `https://fake-gateway.com/pay/${fakeTransactionId}`,
+        transactionId: fakeTransactionId
+    };
   }
 
-  // =================================================================
-  // 2. HANDLE WEBHOOK (Cổng thanh toán gọi ngược lại server mình)
-  // =================================================================
-  // Đây là hàm quan trọng nhất để xác nhận tiền đã về túi chưa
-  async handleWebhook(eventData: any) {
-    // 1. Verify Signature (Bảo mật: Đảm bảo request này từ Stripe/Momo thật chứ không phải hacker giả mạo)
-    
-    // 2. Nếu thanh toán THÀNH CÔNG
-    if (eventData.status === 'succeeded') {
-        // A. Cập nhật trạng thái Payment trong DB thành 'COMPLETED'
-        const txId = eventData.transactionId;
-        const payment = await this.paymentRepo.updateStatus(txId, 'completed');
+  async handlePaymentSuccess(transactionId: string) {
+    const payment = await this.paymentRepo.findByTransactionId(transactionId);
+    if (!payment) throw new NotFoundError("Transaction not found");
 
-        // B. Kích hoạt khóa học cho user (Gọi Enrollment Module)
-        // await this.enrollmentService.createEnrollment({
-        //    student: payment.userId,
-        //    course: payment.courseId
-        // });
-        
-        return { success: true };
+    if (payment.status === PaymentStatus.COMPLETED) {
+        return payment; 
     }
 
-    // 3. Nếu THẤT BẠI
-    if (eventData.status === 'failed') {
-        await this.paymentRepo.updateStatus(eventData.transactionId, 'failed');
-    }
-  }
+    const updatedPayment = await this.paymentRepo.updateStatus(
+        payment._id as string, 
+        PaymentStatus.COMPLETED
+    );
 
-  // =================================================================
-  // 3. GET BY TRANSACTION ID (Tra cứu giao dịch)
-  // =================================================================
-  async getPaymentByTransactionId(txId: string) {
-    return await this.paymentRepo.findByTransactionId(txId);
-  }
+    await this.enrollmentService.enrollCourse(
+        payment.user.toString(), 
+        payment.course.toString(), 
+        payment.amount
+    );
 
-  // =================================================================
-  // 4. GET USER PAYMENTS (Lịch sử giao dịch)
-  // =================================================================
-  async getUserPayments(userId: string) {
-    return await this.paymentRepo.findByUser(userId);
+    return updatedPayment;
+  }
+  
+  async getMyHistory(userId: string) {
+      return await this.paymentRepo.findByUser(userId);
   }
 }

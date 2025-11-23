@@ -1,7 +1,4 @@
-import { Types } from "mongoose";
-import { IUser } from "../user/user.interface";
-import { ISection } from "../section/section.interface";
-import { ICategory } from "../category/category.interface";
+import { Document, Types } from "mongoose";
 
 export enum CourseLevel {
   BEGINNER = "beginner",
@@ -15,26 +12,41 @@ export enum CourseStatus {
   ARCHIVED = "archived",
 }
 
-export interface ICourse {
-  _id?: Types.ObjectId;
-  slug: string;
+export interface ICourse extends Document {
   title: string;
+  slug: string; 
   description: string;
-  instructor: Types.ObjectId | IUser;
-  category: Types.ObjectId | ICategory;
+  instructor: Types.ObjectId;
+  category: Types.ObjectId;
   level: CourseLevel;
   status: CourseStatus;
-  price: number; 
+  price: number;
   discountPrice?: number;
   thumbnail: string;
-  sections: Types.ObjectId[] | ISection[]; 
   language: string;
   duration: number; 
-  enrollmentCount: number; 
+  enrollmentCount: number;
   averageRating: number;
+  totalReviews: number;
   tags: string[];
   requirements: string[];
   outcomes: string[];
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+export interface ICourseRepository {
+  create(data: any): Promise<ICourse>;
+  update(id: string, data: any): Promise<ICourse | null>;
+  delete(id: string): Promise<void>;
+  findById(id: string): Promise<ICourse | null>;
+  findBySlug(slug: string): Promise<ICourse | null>;
+  
+  findAll(query: any): Promise<{ courses: ICourse[], total: number, totalPages: number }>;
+  
+  findByInstructor(instructorId: string): Promise<ICourse[]>;
+  
+  findRelated(courseId: string): Promise<ICourse[]>;
+  
+  findPopular(limit: number): Promise<ICourse[]>;
 }

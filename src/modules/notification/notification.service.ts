@@ -1,49 +1,37 @@
-import { INotification, INotificationRepository } from "./notification.interface"; // Gộp interface
+import { INotificationRepository } from "./notification.interface";
+import { NotFoundError } from "../../core/error.response";
 
 export class NotificationService {
   constructor(private readonly notificationRepo: INotificationRepository) {}
 
-  // =================================================================
-  // 1. CREATE NOTIFICATION (Lưu DB + Bắn Socket)
-  // =================================================================
-  async createNotification(data: Partial<INotification>) {
-    // Bước 1: Lưu vào Database
-    const notification = await this.notificationRepo.create(data);
-
-    // Bước 2: [QUAN TRỌNG] Gửi Real-time qua Socket.io
-    // Tech Lead Note: Đây là chỗ bạn gọi Socket Service
-    // global.io.to(data.userId).emit('new_notification', notification);
-    
-    return notification;
+  async pushNotification(data: any) {
+    return await this.notificationRepo.create(data);
   }
 
-  // =================================================================
-  // 2. GET USER NOTIFICATIONS (Lấy danh sách)
-  // =================================================================
-  async getUserNotifications(userId: string) {
-    // Tech Lead Note: Nên implement thêm Phân trang (Pagination)
-    // Vì user có thể có hàng ngàn thông báo, load hết sẽ sập app.
-    return await this.notificationRepo.findByUser(userId);
+  async getMyNotifications(userId: string, query: any) {
+    const page = query.page ? Number(query.page) : 1;
+    const limit = query.limit ? Number(query.limit) : 20;
+
+    const [notifications, unreadCount] = await Promise.all([
+        this.notificationRepo.findByUser(userId, page, limit),
+        this.notificationRepo.countUnread(userId)
+    ]);
+
+    return {
+        notifications,
+        unreadCount,
+        page,
+        limit
+    };
   }
 
-  // =================================================================
-  // 3. MARK AS READ (Đánh dấu đã đọc)
-  // =================================================================
-  async markAsRead(notificationId: string) {
-    return await this.notificationRepo.markAsRead(notificationId);
+  async markRead(userId: string, notificationId: string) {
+    const updated = await this.notificationRepo.markAsRead(notificationId, userId);
+    if (!updated) throw new NotFoundError("Notification not found");
+    return updated;
   }
-  
-  // [BONUS] MARK ALL AS READ (Tính năng thường thấy)
-  /*
-  async markAllAsRead(userId: string) {
-      return await this.notificationRepo.markAllAsRead(userId);
-  }
-  */
 
-  // =================================================================
-  // 4. DELETE (Xóa thông báo)
-  // =================================================================
-  async deleteNotification(notificationId: string): Promise<void> {
-    await this.notificationRepo.delete(notificationId);
+  async markAllRead(userId: string) {
+    await this.notificationRepo.markAllAsRead(userId);
   }
 }

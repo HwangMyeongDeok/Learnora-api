@@ -1,17 +1,27 @@
-import { Types } from "mongoose";
-import { IUser } from "./user.interface";
+import { Document, Types } from "mongoose";
 
 export interface IBadge {
   name: string;
   description: string;
-  icon: string; 
+  icon: string;
+  earnedAt: Date;
 }
 
-export interface IGamification {
-  _id?: Types.ObjectId;
-  user: Types.ObjectId | IUser;
-  points: number; 
+export interface IGamification extends Document {
+  user: Types.ObjectId;
+  points: number;
   badges: IBadge[];
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+export interface IGamificationRepository {
+  findOrCreate(userId: string): Promise<IGamification>;
+  
+  updatePoints(userId: string, points: number): Promise<IGamification>;
+  
+  addBadge(userId: string, badge: IBadge): Promise<IGamification>;
+  
+  findLeaderboard(limit: number): Promise<IGamification[]>;
+  
 }

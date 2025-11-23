@@ -1,32 +1,54 @@
-import { Request, Response } from "express";
-import { NotificationRepository } from "./notification.repository";
-import { CreateNotificationUseCase } from "./create-notification.usecase";
-import { GetUserNotificationsUseCase } from "./get-user-notifications.usecase";
-import { MarkNotificationReadUseCase } from "./mark-notification-read.usecase";
-import { DeleteNotificationUseCase } from "./delete-notification.usecase";
+import { Request, Response, NextFunction } from "express";
+import { NotificationService } from "./notification.service";
+import { OK } from "../../core/success.response";
 
-const repo = new NotificationRepository();
+export class NotificationController {
+  constructor(private readonly notificationService: NotificationService) {}
 
-export const createNotification = async (req: Request, res: Response) => {
-  const usecase = new CreateNotificationUseCase(repo);
-  const result = await usecase.execute(req.body);
-  res.status(201).json(result);
-};
+  list = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const result = await this.notificationService.getMyNotifications(
+        req.user.userId, 
+        req.query
+      );
+      
+      new OK({
+        message: "Get notifications success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const getUserNotifications = async (req: Request, res: Response) => {
-  const usecase = new GetUserNotificationsUseCase(repo);
-  const result = await usecase.execute(req.user!.userId);
-  res.status(200).json(result);
-};
+  markRead = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      const { id } = req.params;
 
-export const markNotificationRead = async (req: Request, res: Response) => {
-  const usecase = new MarkNotificationReadUseCase(repo);
-  const result = await usecase.execute(req.params.id);
-  res.status(200).json(result);
-};
+      const result = await this.notificationService.markRead(req.user.userId, id);
+      new OK({
+        message: "Marked as read",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const deleteNotification = async (req: Request, res: Response) => {
-  const usecase = new DeleteNotificationUseCase(repo);
-  await usecase.execute(req.params.id);
-  res.status(204).send();
-};
+  markAllRead = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      await this.notificationService.markAllRead(req.user.userId);
+      new OK({
+        message: "All marked as read",
+        metadata: {},
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+}

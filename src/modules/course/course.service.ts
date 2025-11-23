@@ -1,96 +1,48 @@
-import { ICourse, CourseLevel, CourseStatus } from "./course.interface"; // Nhớ move về cùng folder
-import { ICourseRepository } from "./course.interface"; // Gộp interface repo vào chung file interface hoặc để riêng tùy bạn
-
-// Định nghĩa interface cho Search Filters ngay tại đây hoặc trong file interface
-export interface SearchFilters {
-  keyword?: string;
-  category?: string;
-  level?: CourseLevel;
-  priceRange?: [number, number];
-  status?: CourseStatus;
-}
-
-export interface PaginationParams {
-  page: number;
-  limit: number;
-}
+import { ICourseRepository } from "./course.interface";
+import { NotFoundError } from "../../core/error.response";
 
 export class CourseService {
   constructor(private readonly courseRepo: ICourseRepository) {}
 
-  // =================================================================
-  // 1. CREATE & UPDATE
-  // =================================================================
-  async createCourse(data: Partial<ICourse>): Promise<ICourse> {
-    // Tech Lead Note: Có thể thêm logic tự động tạo Slug từ Title ở đây
+  async createCourse(data: any) {
     return await this.courseRepo.create(data);
   }
 
-  async updateCourse(courseId: string, data: Partial<ICourse>): Promise<ICourse | null> {
-    // Check tồn tại trước khi update
-    const course = await this.courseRepo.findById(courseId);
-    if (!course) {
-        // throw new ErrorHandler("Course not found", 404);
-        return null; 
-    }
-    return await this.courseRepo.update(courseId, data);
+  async updateCourse(id: string, data: any) {
+    const updated = await this.courseRepo.update(id, data);
+    if (!updated) throw new NotFoundError("Course not found");
+    return updated;
   }
 
-  async updateCourseStatus(id: string, status: CourseStatus): Promise<ICourse | null> {
-    return await this.courseRepo.updateStatus(id, status);
+  async deleteCourse(id: string) {
+    await this.courseRepo.delete(id);
   }
 
-  // =================================================================
-  // 2. DELETE
-  // =================================================================
-  async deleteCourse(courseId: string): Promise<void> {
-    // Tech Lead Note: Cân nhắc Soft Delete (đánh dấu đã xóa) thay vì xóa thật
-    await this.courseRepo.delete(courseId);
-  }
-
-  // =================================================================
-  // 3. GET SINGLE COURSE
-  // =================================================================
-  async getCourseById(courseId: string): Promise<ICourse | null> {
-    const course = await this.courseRepo.findById(courseId);
-    // Có thể throw error ở đây nếu muốn strict mode
+  async getCourseById(id: string) {
+    const course = await this.courseRepo.findById(id);
+    if (!course) throw new NotFoundError("Course not found");
     return course;
   }
 
-  async getCourseBySlug(slug: string): Promise<ICourse | null> {
-    return await this.courseRepo.findBySlug(slug);
+  async getCourseBySlug(slug: string) {
+    const course = await this.courseRepo.findBySlug(slug);
+    if (!course) throw new NotFoundError("Course not found");
+    return course;
   }
 
-  // =================================================================
-  // 4. GET LISTS (Query, Pagination, Filter)
-  // =================================================================
-  async getAllCourses(): Promise<ICourse[]> {
-    // WARNING: Hàm này nguy hiểm nếu DB lớn. Chỉ dùng cho Admin hoặc Dropdown nhỏ.
-    return await this.courseRepo.findAll();
+  async searchCourses(query: any) {
+    return await this.courseRepo.findAll(query);
   }
 
-  async getCoursesPaginated({ page, limit }: PaginationParams): Promise<ICourse[]> {
-    return await this.courseRepo.findAllPaginated(page, limit);
-  }
-
-  async getCoursesByInstructor(instructorId: string): Promise<ICourse[]> {
-    return await this.courseRepo.findByInstructor(instructorId);
-  }
-
-  // =================================================================
-  // 5. ADVANCED FEATURES (Search, Popular, Related)
-  // =================================================================
-  async searchCourses(filters: SearchFilters): Promise<ICourse[]> {
-    // Logic search phức tạp sẽ nằm ở Repo, Service chỉ gọi xuống
-    return await this.courseRepo.search(filters);
-  }
-
-  async getPopularCourses(limit: number): Promise<ICourse[]> {
+  async getPopularCourses(limit: number = 10) {
     return await this.courseRepo.findPopular(limit);
   }
 
-  async getRelatedCourses(courseId: string): Promise<ICourse[]> {
-    // Logic gợi ý khóa học liên quan (dựa trên Tag hoặc Category)
+  async getRelatedCourses(courseId: string) {
     return await this.courseRepo.findRelated(courseId);
+  }
+  
+  async getInstructorCourses(instructorId: string) {
+      return await this.courseRepo.findByInstructor(instructorId);
   }
 }

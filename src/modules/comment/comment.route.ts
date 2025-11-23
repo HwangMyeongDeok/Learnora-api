@@ -1,22 +1,30 @@
 import { Router } from "express";
-import {
-  createComment,
-  getCommentsByLecture,
-  deleteComment,
-  replyComment,
-  updateComment,
-} from "./comment.controller";
+import { CommentController } from "./comment.controller";
+import { CommentService } from "./comment.service";
+import { CommentRepository } from "./comment.repository";
+
 import { isAuthenticated } from "../../middleware/isAuthenticated";
-import { CreateCommentDto } from "./dtos/create-comment.dto";
 import { validateMiddleware } from "../../middleware/validation";
-import { UpdateCommentDto } from "./dtos/update-comment.dto";
+import { CreateCommentDto } from "./dtos/create-comment.dto";
 
 const router = Router();
 
-router.post("/", isAuthenticated, validateMiddleware(CreateCommentDto), createComment);
-router.get("/lecture/:lectureId", getCommentsByLecture);
-router.delete("/:id", isAuthenticated, deleteComment);
-router.post("/:id/reply", isAuthenticated, replyComment);
-router.put("/:id", isAuthenticated, validateMiddleware(UpdateCommentDto), updateComment);
+const commentRepo = new CommentRepository();
+const commentService = new CommentService(commentRepo);
+const commentController = new CommentController(commentService);
+
+
+router.post(
+    "/", 
+    isAuthenticated, 
+    validateMiddleware(CreateCommentDto), 
+    commentController.create
+);
+
+router.get("/lesson/:lessonId", commentController.getByLesson);
+
+router.get("/:commentId/replies", commentController.getReplies);
+
+router.delete("/:id", isAuthenticated, commentController.delete);
 
 export default router;

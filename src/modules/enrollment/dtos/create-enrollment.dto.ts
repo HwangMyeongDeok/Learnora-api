@@ -1,14 +1,15 @@
-import { IsString, IsOptional, IsEnum } from "class-validator";
-import { EnrollmentStatus } from "../enrollment.interface";
+import { IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateEnrollmentDto {
-  @IsString()
-  student!: string;
-
-  @IsString()
-  course!: string;
+  @IsNotEmpty()
+  @IsMongoId()
+  courseId!: string;
 
   @IsOptional()
-  @IsEnum(EnrollmentStatus)
-  status?: EnrollmentStatus;
+  @IsNumber()
+  pricePaid?: number;
+
+  @IsOptional()
+  @IsString()
+  couponCode?: string;
 }

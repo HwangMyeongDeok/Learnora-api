@@ -1,33 +1,42 @@
-import { Request, Response } from "express";
-import { ProgressRepository } from "../../modules/progress/progress.repository";
-import { CreateProgressUseCase } from "../../modules/progress/create-progress.usecase";
-import { GetProgressByEnrollmentUseCase } from "../../modules/progress/get-progress-by-enrollment.usecase";
-import { UpdateProgressUseCase } from "../../modules/progress/update-progress.usecase";
-import { DeleteProgressUseCase } from "../../modules/progress/delete-progress.usecase";
+import { Request, Response, NextFunction } from "express";
+import { ProgressService } from "./progress.service";
+import { OK } from "../../core/success.response";
 
-const repo = new ProgressRepository();
+export class ProgressController {
+  constructor(private readonly progressService: ProgressService) {}
 
-export const createProgress = async (req: Request, res: Response) => {
-  const usecase = new CreateProgressUseCase(repo);
-  const result = await usecase.execute(req.body);
-  res.status(201).json(result);
-};
+  getProgress = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      const { courseId } = req.params;
 
-export const getProgressByEnrollment = async (req: Request, res: Response) => {
-  const usecase = new GetProgressByEnrollmentUseCase(repo);
-  const result = await usecase.execute(req.params.enrollmentId);
-  res.status(200).json(result);
-};
+      const result = await this.progressService.getProgress(req.user.userId, courseId);
+      new OK({
+        message: "Get progress success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const updateProgress = async (req: Request, res: Response) => {
-  const usecase = new UpdateProgressUseCase(repo);
-  const updated = await usecase.execute(req.params.id, req.body);
-  if (!updated) res.status(404).json({ message: "Progress not found" });
-  res.status(200).json(updated);
-};
+  markCompleted = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      const { courseId, lessonId } = req.body;
 
-export const deleteProgress = async (req: Request, res: Response) => {
-  const usecase = new DeleteProgressUseCase(repo);
-  await usecase.execute(req.params.id);
-  res.status(204).send();
-};
+      const result = await this.progressService.markLessonCompleted(
+        req.user.userId, 
+        courseId, 
+        lessonId
+      );
+
+      new OK({
+        message: "Lesson completed",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+}

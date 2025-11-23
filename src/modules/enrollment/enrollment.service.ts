@@ -1,54 +1,40 @@
-import { IEnrollment } from "./enrollment.interface"; // Nhớ gộp interface vào module
-import { IEnrollmentRepository } from "./enrollment.interface"; // Interface Repo cũng gộp vào đây
-
-// import { CreateEnrollmentDto } from "./dtos/create-enrollment.dto";
+import { IEnrollmentRepository } from "./enrollment.interface";
+import { ConflictRequestError, NotFoundError } from "../../core/error.response";
+import { ProgressService } from "../progress/progress.service"; 
 
 export class EnrollmentService {
-  constructor(private readonly enrollmentRepo: IEnrollmentRepository) {}
+  constructor(
+    private readonly enrollmentRepo: IEnrollmentRepository,
+    private readonly progressService: ProgressService 
+  ) {}
 
-  // =================================================================
-  // 1. ENROLL (Ghi danh học viên vào khóa học)
-  // =================================================================
-  async createEnrollment(data: Partial<IEnrollment>): Promise<IEnrollment> {
-    // Tech Lead Note: Logic kiểm tra trùng lặp (Business Logic)
-    // Trước khi tạo, phải kiểm tra xem user này đã enroll khóa này chưa?
-    // const existing = await this.enrollmentRepo.checkEnrollment(data.student, data.course);
-    // if (existing) throw new ErrorHandler("User already enrolled in this course", 400);
+  async enrollCourse(studentId: string, courseId: string, pricePaid: number) {
+    const existing = await this.enrollmentRepo.findCheck(studentId, courseId);
+    if (existing) {
+        throw new ConflictRequestError("You already enrolled in this course");
+    }
 
-    const enrollment = await this.enrollmentRepo.create(data);
+    const enrollment = await this.enrollmentRepo.create({
+        student: studentId,
+        course: courseId,
+        pricePaid: pricePaid
+    });
 
-    // TODO: Sau này sẽ gọi ProgressService để khởi tạo tiến độ học 0% ngay khi enroll
-    // await this.progressService.initProgress(enrollment._id);
+    await this.progressService.createInitialProgress(
+        studentId, 
+        courseId, 
+        enrollment._id.toString() 
+    );
 
     return enrollment;
   }
 
-  // =================================================================
-  // 2. GET BY STUDENT (Học viên xem "Khóa học của tôi")
-  // =================================================================
-  async getEnrollmentsByStudent(studentId: string) {
+  async getMyEnrollments(studentId: string) {
     return await this.enrollmentRepo.findByStudent(studentId);
   }
 
-  // =================================================================
-  // 3. GET BY COURSE (Giảng viên xem danh sách lớp)
-  // =================================================================
-  async getEnrollmentsByCourse(courseId: string) {
-    return await this.enrollmentRepo.findByCourse(courseId);
-  }
-
-  // =================================================================
-  // 4. UPDATE (Ví dụ: Gia hạn khóa học, Cập nhật trạng thái hoàn thành)
-  // =================================================================
-  async updateEnrollment(id: string, data: Partial<IEnrollment>) {
-    return await this.enrollmentRepo.update(id, data);
-  }
-
-  // =================================================================
-  // 5. DELETE (Hủy ghi danh / Refund)
-  // =================================================================
-  async deleteEnrollment(id: string): Promise<void> {
-    await this.enrollmentRepo.delete(id);
-    // Tech Lead Note: Nếu xóa enrollment, nhớ xóa cả Progress học tập đi kèm nhé
+  async checkEnrollment(studentId: string, courseId: string) {
+    const enrollment = await this.enrollmentRepo.findCheck(studentId, courseId);
+    return { isEnrolled: !!enrollment }; 
   }
 }

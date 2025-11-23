@@ -1,45 +1,62 @@
-import { Request, Response } from "express";
-import { CommentRepository } from "./comment.repository";
-import { CreateCommentUseCase } from "./create-comment.usecase";
-import { GetCommentsByLectureUseCase } from "./get-comments-by-lecture.usecase";
-import { DeleteCommentUseCase } from "./delete-comment.usecase";
-import { ReplyCommentUseCase } from "./reply-comment.usecase";
-import { UpdateCommentUseCase } from "./update-comment.usecase";
+import { Request, Response, NextFunction } from "express";
+import { CommentService } from "./comment.service";
+import { CREATED, OK } from "../../core/success.response";
 
-const repo = new CommentRepository();
+export class CommentController {
+  constructor(private readonly commentService: CommentService) {}
 
-export const createComment = async (req: Request, res: Response) => {
-  const usecase = new CreateCommentUseCase(repo);
-  const result = await usecase.execute({ ...req.body, user: req.user?.userId });
-  res.status(201).json(result);
-};
+  create = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const result = await this.commentService.createComment(req.user.userId, req.body);
+      new CREATED({
+        message: "Comment posted",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const getCommentsByLecture = async (req: Request, res: Response) => {
-  const usecase = new GetCommentsByLectureUseCase(repo);
-  const result = await usecase.execute(req.params.lectureId);
-  res.status(200).json(result);
-};
+  getByLesson = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { lessonId } = req.params;
+      const result = await this.commentService.getCommentsByLesson(lessonId, req.query);
+      new OK({
+        message: "Get comments success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const deleteComment = async (req: Request, res: Response) => {
-  const usecase = new DeleteCommentUseCase(repo);
-  await usecase.execute(req.params.id);
-  res.status(204).send();
-};
+  getReplies = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { commentId } = req.params;
+      const result = await this.commentService.getReplies(commentId);
+      new OK({
+        message: "Get replies success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const replyComment = async (req: Request, res: Response) => {
-  const usecase = new ReplyCommentUseCase(repo);
-  const result = await usecase.execute(req.params.id, {
-    ...req.body,
-    user: req.user?.userId,
-    lecture: req.body.lecture,
-    parentComment: req.params.id,
-  });
-  res.status(201).json(result);
-};
-
-export const updateComment = async (req: Request, res: Response) => {
-  const useCase = new UpdateCommentUseCase(repo);
-  const updated = await useCase.execute(req.params.id, req.body);
-  if (!updated) res.status(404).json({ message: "Not found" });
-  res.status(200).json(updated);
-};
+  delete = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      const { id } = req.params;
+      
+      await this.commentService.deleteComment(req.user.userId, id);
+      new OK({
+        message: "Comment deleted",
+        metadata: {},
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+}

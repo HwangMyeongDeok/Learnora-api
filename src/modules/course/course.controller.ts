@@ -1,101 +1,113 @@
-import { Request, Response } from "express";
-import { CourseRepository } from "./course.repository";
-import { CreateCourseUseCase } from "./create-course.usecase";
-import { GetAllCoursesUseCase } from "./get-all-courses.usecase";
-import { GetCourseByIdUseCase } from "./get-course-by-id.usecase";
-import { UpdateCourseUseCase } from "./update-course.usecase";
-import { DeleteCourseUseCase } from "./delete-course.usecase";
-import { GetCoursesPaginatedUseCase } from "./get-courses-paginated.usecase";
-import { GetPopularCoursesUseCase } from "./get-popular-courses.usecase";
-import { SearchCoursesUseCase } from "./search-courses.usecase";
-import { GetCourseBySlugUseCase } from "./get-course-by-slug.usecase";
-import { GetCoursesByInstructorUseCase } from "./get-courses-by-instructor.usecase";
-import { UpdateCourseStatusUseCase } from "./update-course-status.usecase";
-import { GetRelatedCoursesUseCase } from "./get-related-courses.usecase";
+import { Request, Response, NextFunction } from "express";
+import { CourseService } from "./course.service";
+import { CREATED, OK } from "../../core/success.response";
 
-const courseRepo = new CourseRepository();
+export class CourseController {
+  constructor(private readonly courseService: CourseService) {}
 
-export const createCourse = async (req: Request, res: Response) => {
-  const useCase = new CreateCourseUseCase(courseRepo);
-  const course = await useCase.execute(req.body);
-  res.status(201).json(course);
-};
+  create = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const courseData = { ...req.body, instructor: req.user.userId };
+      const result = await this.courseService.createCourse(courseData);
+      
+      new CREATED({
+        message: "Course created successfully",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const getAllCourses = async (req: Request, res: Response) => {
-  const useCase = new GetAllCoursesUseCase(courseRepo);
-  const courses = await useCase.execute();
-  res.status(200).json(courses);
-};
+  getAll = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.courseService.searchCourses(req.query);
+      new OK({
+        message: "Get courses success",
+        metadata: result.courses,
+        options: {
+            total: result.total,
+            totalPages: result.totalPages,
+            page: req.query.page || 1,
+            limit: req.query.limit || 10
+        }
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const getCourseById = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const useCase = new GetCourseByIdUseCase(courseRepo);
-  const course = await useCase.execute(req.params.id);
-  if (!course) res.status(404).json({ message: "Course not found" });
-  res.status(200).json(course);
-};
+  getOneBySlug = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { slug } = req.params;
+      const result = await this.courseService.getCourseBySlug(slug);
+      new OK({
+        message: "Get course detail success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const updateCourse = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const useCase = new UpdateCourseUseCase(courseRepo);
-  const updated = await useCase.execute(req.params.id, req.body);
-  if (!updated) res.status(404).json({ message: "Course not found" });
-  res.status(200).json(updated);
-};
+  getOneById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const result = await this.courseService.getCourseById(id);
+      new OK({
+        message: "Get course detail success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const deleteCourse = async (req: Request, res: Response) => {
-  const useCase = new DeleteCourseUseCase(courseRepo);
-  await useCase.execute(req.params.id);
-  res.status(204).send();
-};
+  update = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const { id } = req.params;
+      const result = await this.courseService.updateCourse(id, req.body);
 
-export const getCoursesPaginated = async (req: Request, res: Response) => {
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
-  const useCase = new GetCoursesPaginatedUseCase(courseRepo);
-  const result = await useCase.execute({ page, limit });
-  res.status(200).json(result);
-};
+      new OK({
+        message: "Course updated successfully",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const getPopularCourses = async (req: Request, res: Response) => {
-  const limit = parseInt(req.query.limit as string) || 5;
-  const useCase = new GetPopularCoursesUseCase(courseRepo);
-  const result = await useCase.execute(limit);
-  res.status(200).json(result);
-};
+  delete = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const { id } = req.params;
+      await this.courseService.deleteCourse(id);
 
-export const searchCourses = async (req: Request, res: Response) => {
-  const useCase = new SearchCoursesUseCase(courseRepo);
-  const result = await useCase.execute(req.query);
-  res.status(200).json(result);
-};
+      new OK({
+        message: "Course deleted successfully",
+        metadata: {},
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const getCourseBySlug = async (req: Request, res: Response) => {
-  const useCase = new GetCourseBySlugUseCase(courseRepo);
-  const course = await useCase.execute(req.params.slug);
-  if (!course) res.status(404).json({ message: "Not found" });
-  res.status(200).json(course);
-};
-
-export const getCoursesByInstructor = async (req: Request, res: Response) => {
-  const useCase = new GetCoursesByInstructorUseCase(courseRepo);
-  const courses = await useCase.execute(req.params.instructorId);
-  res.status(200).json(courses);
-};
-
-export const updateCourseStatus = async (req: Request, res: Response) => {
-  const useCase = new UpdateCourseStatusUseCase(courseRepo);
-  const updated = await useCase.execute(req.params.id, req.body.status);
-  if (!updated) res.status(404).json({ message: "Course not found" });
-  res.status(200).json(updated);
-};
-
-export const getRelatedCourses = async (req: Request, res: Response) => {
-  const useCase = new GetRelatedCoursesUseCase(courseRepo);
-  const result = await useCase.execute(req.params.id);
-  res.status(200).json(result);
-};
+  getMyCourses = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const result = await this.courseService.getInstructorCourses(req.user.userId);
+      new OK({
+        message: "Get my courses success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+}

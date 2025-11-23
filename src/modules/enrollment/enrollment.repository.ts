@@ -1,30 +1,31 @@
-import { IEnrollment } from "./enrollment.interface";
-import { IEnrollmentRepository } from "../../domain/enrollment/enrollment.repository.interface";
-import { Enrollment } from "./enrollment.model";
-
+import { EnrollmentModel } from "./enrollment.model";
+import { IEnrollment, IEnrollmentRepository, EnrollmentStatus } from "./enrollment.interface";
 
 export class EnrollmentRepository implements IEnrollmentRepository {
-  async create(data: Partial<IEnrollment>): Promise<IEnrollment> {
-    return await Enrollment.create(data);
+  
+  async create(data: any): Promise<IEnrollment> {
+    return await EnrollmentModel.create(data);
   }
 
-  async findById(id: string): Promise<IEnrollment | null> {
-    return await Enrollment.findById(id).populate("student course");
+  async findCheck(studentId: string, courseId: string): Promise<IEnrollment | null> {
+    return await EnrollmentModel.findOne({
+        student: studentId,
+        course: courseId,
+        status: { $in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] } 
+    }).lean<IEnrollment>();
   }
 
   async findByStudent(studentId: string): Promise<IEnrollment[]> {
-    return await Enrollment.find({ student: studentId }).populate("course");
+    return await EnrollmentModel.find({ 
+        student: studentId,
+        status: { $ne: EnrollmentStatus.REFUNDED }
+    })
+    .populate("course", "title thumbnail slug instructor level") 
+    .sort({ lastAccessed: -1 }) 
+    .lean<IEnrollment[]>();
   }
 
-  async findByCourse(courseId: string): Promise<IEnrollment[]> {
-    return await Enrollment.find({ course: courseId }).populate("student");
-  }
-
-  async update(id: string, data: Partial<IEnrollment>): Promise<IEnrollment | null> {
-    return await Enrollment.findByIdAndUpdate(id, data, { new: true });
-  }
-
-  async delete(id: string): Promise<void> {
-    await Enrollment.findByIdAndDelete(id);
+  async update(id: string, data: any): Promise<IEnrollment | null> {
+    return await EnrollmentModel.findByIdAndUpdate(id, data, { new: true }).lean<IEnrollment>();
   }
 }

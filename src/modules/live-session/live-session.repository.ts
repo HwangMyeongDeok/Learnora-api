@@ -1,25 +1,37 @@
-import { LiveSession } from "./live-session..model";
-import { ILiveSession } from "./live-session.interface";
-import { ILiveSessionRepository } from "../../domain/liveSession/liveSession.repository.interface";
+import { LiveSessionModel } from "./live-session.model";
+import { ILiveSession, ILiveSessionRepository, LiveSessionStatus } from "./live-session.interface";
 
 export class LiveSessionRepository implements ILiveSessionRepository {
-  async create(data: Partial<ILiveSession>): Promise<ILiveSession> {
-    return await LiveSession.create(data);
+  
+  async create(data: any): Promise<ILiveSession> {
+    return await LiveSessionModel.create(data);
   }
 
-  async findById(id: string): Promise<ILiveSession | null> {
-    return await LiveSession.findById(id).populate("course instructor");
-  }
-
-  async findByCourse(courseId: string): Promise<ILiveSession[]> {
-    return await LiveSession.find({ course: courseId }).sort({ startTime: 1 });
-  }
-
-  async update(id: string, data: Partial<ILiveSession>): Promise<ILiveSession | null> {
-    return await LiveSession.findByIdAndUpdate(id, data, { new: true });
+  async update(id: string, data: any): Promise<ILiveSession | null> {
+    return await LiveSessionModel.findByIdAndUpdate(id, data, { new: true }).lean<ILiveSession>();
   }
 
   async delete(id: string): Promise<void> {
-    await LiveSession.findByIdAndDelete(id);
+    await LiveSessionModel.findByIdAndDelete(id);
+  }
+
+  async findById(id: string): Promise<ILiveSession | null> {
+    return await LiveSessionModel.findById(id).lean<ILiveSession>();
+  }
+
+  async findByCourse(courseId: string): Promise<ILiveSession[]> {
+    return await LiveSessionModel.find({ course: courseId })
+        .sort({ startTime: 1 }) 
+        .lean<ILiveSession[]>();
+  }
+
+  async findUpcomingByInstructor(instructorId: string): Promise<ILiveSession[]> {
+    return await LiveSessionModel.find({ 
+        instructor: instructorId,
+        status: LiveSessionStatus.SCHEDULED,
+        startTime: { $gte: new Date() }
+    })
+    .sort({ startTime: 1 })
+    .lean<ILiveSession[]>();
   }
 }

@@ -1,28 +1,41 @@
-import { Types } from "mongoose";
-import { IUser } from "../user/user.interface";
+import { Document, Types } from "mongoose";
 
 export enum NotificationType {
-  COURSE_UPDATE = "course_update",
-  ASSIGNMENT_DUE = "assignment_due",
-  NEW_MESSAGE = "new_message",
-  CERTIFICATE_ISSUED = "certificate_issued",
+  SYSTEM = "system",
+  COURSE = "course",     
+  COMMENT = "comment",    
+  PAYMENT = "payment",    
+  PROMOTION = "promotion" 
 }
+
 export enum NotificationChannel {
   IN_APP = "in-app",
   EMAIL = "email",
-  PUSH = "push"
+  SMS = "sms"
 }
 
-
-export interface INotification {
-  _id?: Types.ObjectId;
-  user: Types.ObjectId | IUser;
+export interface INotification extends Document {
+  user: Types.ObjectId;
   type: NotificationType;
+  title?: string;
   message: string;
   read: boolean;
-  createdAt?: Date;
   seenAt?: Date;
   link?: string;
   targetId?: Types.ObjectId;
-  deliveredVia?: NotificationChannel;
+  deliveredVia: NotificationChannel;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface INotificationRepository {
+  create(data: any): Promise<INotification>;
+  
+  findByUser(userId: string, page: number, limit: number): Promise<INotification[]>;
+  
+  countUnread(userId: string): Promise<number>;
+  
+  markAsRead(id: string, userId: string): Promise<INotification | null>;
+  
+  markAllAsRead(userId: string): Promise<void>;
 }

@@ -1,14 +1,20 @@
 import { Router } from "express";
-import { getGamification, addPoints, addBadge, updatePoints } from "./gamification.controller";
+import { GamificationController } from "./gamification.controller";
+import { GamificationService } from "./gamification.service";
+import { GamificationRepository } from "./gamification.repository";
 import { isAuthenticated } from "../../middleware/isAuthenticated";
-import { validateMiddleware } from "../../middleware/validation";
-import { UpdatePointsDto } from "../../modules/gamification/dtos/update-points.dto";
 
 const router = Router();
 
-router.get("/", isAuthenticated, getGamification);
-router.post("/points", isAuthenticated, addPoints);
-router.post("/badge", isAuthenticated, addBadge);
-router.put("/points/:userId", validateMiddleware(UpdatePointsDto), updatePoints);
+const gamificationRepo = new GamificationRepository();
+const gamificationService = new GamificationService(gamificationRepo);
+const gamificationController = new GamificationController(gamificationService);
+
+
+router.get("/leaderboard", gamificationController.getLeaderboard);
+
+router.get("/my-stats", isAuthenticated, gamificationController.getMyStats);
+
+
 
 export default router;

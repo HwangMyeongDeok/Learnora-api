@@ -1,10 +1,8 @@
 import { Schema, model } from "mongoose";
-import {
-  INotification,
-  NotificationChannel,
-  NotificationType,
-  
-} from "./notification.interface";
+import { INotification, NotificationChannel, NotificationType } from "./notification.interface";
+
+const DOCUMENT_NAME = "Notification";
+const COLLECTION_NAME = "Notifications";
 
 const notificationSchema = new Schema<INotification>(
   {
@@ -14,6 +12,7 @@ const notificationSchema = new Schema<INotification>(
       enum: Object.values(NotificationType),
       required: true,
     },
+    title: { type: String },
     message: { type: String, required: true },
     read: { type: Boolean, default: false },
     seenAt: { type: Date },
@@ -22,13 +21,18 @@ const notificationSchema = new Schema<INotification>(
     deliveredVia: {
       type: String,
       enum: Object.values(NotificationChannel),
-      default: "in-app",
+      default: NotificationChannel.IN_APP,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    collection: COLLECTION_NAME
+  }
 );
 
-export const Notification = model<INotification>(
-  "Notification",
-  notificationSchema
-);
+
+notificationSchema.index({ user: 1, createdAt: -1 });
+
+notificationSchema.index({ user: 1, read: 1 });
+
+export const NotificationModel = model<INotification>(DOCUMENT_NAME, notificationSchema);

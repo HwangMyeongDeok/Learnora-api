@@ -1,19 +1,18 @@
 import { Router } from "express";
-import {
-  createNotification,
-  getUserNotifications,
-  markNotificationRead,
-  deleteNotification,
-} from "./notification.controller";
+import { NotificationController } from "./notification.controller";
+import { NotificationService } from "./notification.service";
+import { NotificationRepository } from "./notification.repository";
 import { isAuthenticated } from "../../middleware/isAuthenticated";
-import { validateMiddleware } from "../../middleware/validation";
-import { CreateNotificationDto } from "./dtos/create-notification.dto";
 
 const router = Router();
 
-router.post("/", validateMiddleware(CreateNotificationDto), createNotification);
-router.get("/", isAuthenticated, getUserNotifications);
-router.put("/:id/read", isAuthenticated, markNotificationRead);
-router.delete("/:id", isAuthenticated, deleteNotification);
+const notiRepo = new NotificationRepository();
+const notiService = new NotificationService(notiRepo);
+const notiController = new NotificationController(notiService);
+
+
+router.get("/", isAuthenticated, notiController.list);
+router.patch("/read-all", isAuthenticated, notiController.markAllRead);
+router.patch("/:id/read", isAuthenticated, notiController.markRead);
 
 export default router;

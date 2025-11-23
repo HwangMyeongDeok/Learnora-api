@@ -1,25 +1,28 @@
-import { IsString, IsEnum, IsOptional } from "class-validator";
-import { NotificationChannel, NotificationType } from "../notification.interface";
+import { IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { NotificationType } from "../notification.interface";
 
 export class CreateNotificationDto {
-  @IsString()
-  user!: string;
+  @IsNotEmpty()
+  @IsMongoId()
+  userId!: string; 
 
+  @IsNotEmpty()
   @IsEnum(NotificationType)
   type!: NotificationType;
 
+  @IsNotEmpty()
   @IsString()
   message!: string;
+
+  @IsOptional()
+  @IsString()
+  title?: string;
 
   @IsOptional()
   @IsString()
   link?: string;
 
   @IsOptional()
-  @IsString()
+  @IsMongoId()
   targetId?: string;
-
-  @IsOptional()
-  @IsEnum(NotificationChannel)
-  deliveredVia?: NotificationChannel;
 }

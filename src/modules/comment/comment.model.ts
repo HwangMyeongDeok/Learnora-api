@@ -1,15 +1,28 @@
 import { Schema, model } from "mongoose";
 import { IComment } from "./comment.interface";
 
+const DOCUMENT_NAME = "Comment";
+const COLLECTION_NAME = "Comments";
+
 const commentSchema = new Schema<IComment>(
   {
     content: { type: String, required: true },
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    lecture: { type: Schema.Types.ObjectId, ref: "Lecture", required: true },
-    parentComment: { type: Schema.Types.ObjectId, ref: "Comment" },
-    replies: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
+    lesson: { type: Schema.Types.ObjectId, ref: "Lesson", required: true },
+    parentComment: {
+      type: Schema.Types.ObjectId,
+      ref: "Comment",
+      default: null,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    collection: COLLECTION_NAME,
+  }
 );
 
-export const Comment = model<IComment>("Comment", commentSchema);
+commentSchema.index({ lesson: 1, createdAt: -1 });
+
+commentSchema.index({ parentComment: 1, createdAt: 1 });
+
+export const CommentModel = model<IComment>(DOCUMENT_NAME, commentSchema);

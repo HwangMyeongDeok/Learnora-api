@@ -1,25 +1,57 @@
-import { Comment } from "./comment.model";
-import { IComment } from "./comment.interface";
-import { ICommentRepository } from "../../domain/comment/comment.repository.interface";
+import { CommentModel } from "./comment.model";
+import { IComment, ICommentRepository } from "./comment.interface";
 
 export class CommentRepository implements ICommentRepository {
-  async create(data: Partial<IComment>): Promise<IComment> {
-    return await Comment.create(data);
+  async create(data: any): Promise<IComment> {
+    return await CommentModel.create(data);
   }
 
-  async findByLecture(lectureId: string): Promise<IComment[]> {
-    return await Comment.find({ lecture: lectureId }).populate("user replies");
+  async findById(id: string): Promise<IComment | null> {
+    return await CommentModel.findById(id).lean<IComment>();
   }
 
-  async delete(commentId: string): Promise<void> {
-    await Comment.findByIdAndDelete(commentId);
+  async update(id: string, content: string): Promise<IComment | null> {
+    return await CommentModel.findByIdAndUpdate(
+      id,
+      { content },
+      { new: true }
+    ).lean<IComment>();
   }
 
-  async reply(parentId: string, replyId: string): Promise<void> {
-    await Comment.findByIdAndUpdate(parentId, { $push: { replies: replyId } });
+  async delete(id: string): Promise<void> {
+    await CommentModel.findByIdAndDelete(id);
+    await CommentModel.deleteMany({ parentComment: id });
   }
 
-  async update(id: string, data: Partial<IComment>): Promise<IComment | null> {
-  return await Comment.findByIdAndUpdate(id, data, { new: true });
-}
+  async findRootsByLesson(
+    lessonId: string,
+    page: number,
+    limit: number
+  ): Promise<any> {
+    const skip = (page - 1) * limit;
+
+    const comments = await CommentModel.find({
+      lesson: lessonId,
+      parentComment: null,
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("user", "name avatar")
+      .lean();
+
+    const total = await CommentModel.countDocuments({
+      lesson: lessonId,
+      parentComment: null,
+    });
+
+    return { comments, total, totalPages: Math.ceil(total / limit) };
+  }
+
+  async findReplies(commentId: string): Promise<IComment[]> {
+    return await CommentModel.find({ parentComment: commentId })
+      .sort({ createdAt: 1 })
+      .populate("user", "name avatar")
+      .lean<IComment[]>();
+  }
 }

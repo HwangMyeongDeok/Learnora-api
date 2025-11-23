@@ -1,28 +1,47 @@
-// src/modules/lesson/lesson.model.ts
 import { Schema, model } from "mongoose";
 import { ILesson, LessonType } from "./lesson.interface";
+import slugify from "slugify";
+
+const DOCUMENT_NAME = "Lesson";
+const COLLECTION_NAME = "Lessons";
 
 const lessonSchema = new Schema<ILesson>(
   {
-    title: { type: String, required: true },
-    slug: { type: String, required: true }, // Nên có slug để SEO bài học
+    title: { type: String, required: true, trim: true },
+    slug: { type: String, required: true, index: true },
     description: { type: String },
-    type: { type: String, enum: Object.values(LessonType), required: true }, // video, text, quiz
+    type: { 
+        type: String, 
+        enum: Object.values(LessonType), 
+        required: true 
+    },
     
-    content: { type: String }, // Nếu là Text thì lưu HTML, nếu Video thì lưu URL
-    videoUrl: { type: String }, // Tách riêng URL video ra cho rõ ràng
-    duration: { type: Number, default: 0 }, // Tính bằng giây
+    content: { type: String }, 
+    videoUrl: { type: String }, 
+    duration: { type: Number, default: 0 }, 
     
-    section: { type: Schema.Types.ObjectId, ref: "Section", required: true }, // Link tới Section
-    course: { type: Schema.Types.ObjectId, ref: "Course", required: true }, // Link tới Course (để query nhanh)
+    section: { type: Schema.Types.ObjectId, ref: "Section", required: true },
+    course: { type: Schema.Types.ObjectId, ref: "Course", required: true },
     
-    isPreview: { type: Boolean, default: false }, // Cho phép học thử
-    order: { type: Number, default: 0 } // Sắp xếp thứ tự bài học
+    isPreview: { type: Boolean, default: false },
+    order: { type: Number, default: 0 }
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    collection: COLLECTION_NAME
+  }
 );
 
-// Tạo index để query nhanh bài học trong 1 chương
-lessonSchema.index({ section: 1, order: 1 }); 
 
-export const Lesson = model<ILesson>("Lesson", lessonSchema);
+lessonSchema.index({ section: 1, order: 1 });
+
+lessonSchema.index({ course: 1 });
+
+lessonSchema.pre("save", function (next) {
+  if (this.isModified("title")) {
+    this.slug = slugify(this.title, { lower: true, strict: true }) + "-" + Date.now();
+  }
+  next();
+});
+
+export const LessonModel = model<ILesson>(DOCUMENT_NAME, lessonSchema);

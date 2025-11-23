@@ -1,25 +1,31 @@
-import { ILesson } from "./lesson.interface";
-import { ILessonRepository } from "../../domain/lesson/lesson.repository.interface";
-import { Lesson } from "./lesson.model";
+import { LessonModel } from "./lesson.model";
+import { ILesson, ILessonRepository } from "./lesson.interface";
 
 export class LessonRepository implements ILessonRepository {
-  async create(data: Partial<ILesson>): Promise<ILesson> {
-    return await Lesson.create(data);
+  
+  async create(data: any): Promise<ILesson> {
+    return await LessonModel.create(data);
   }
 
-  async findById(id: string): Promise<ILesson | null> {
-    return await Lesson.findById(id).populate("lecture");
-  }
-
-  async findByCourse(courseId: string): Promise<ILesson[]> {
-    return await Lesson.find({ course: courseId }).sort({ createdAt: 1 });
-  }
-
-  async update(id: string, data: Partial<ILesson>): Promise<ILesson | null> {
-    return await Lesson.findByIdAndUpdate(id, data, { new: true });
+  async update(id: string, data: any): Promise<ILesson | null> {
+    return await LessonModel.findByIdAndUpdate(id, data, { new: true }).lean<ILesson>();
   }
 
   async delete(id: string): Promise<void> {
-    await Lesson.findByIdAndDelete(id);
+    await LessonModel.findByIdAndDelete(id);
+  }
+
+  async findById(id: string): Promise<ILesson | null> {
+    return await LessonModel.findById(id).lean<ILesson>();
+  }
+
+  async findBySection(sectionId: string): Promise<ILesson[]> {
+    return await LessonModel.find({ section: sectionId })
+        .sort({ order: 1 })
+        .lean<ILesson[]>();
+  }
+
+  async countByCourse(courseId: string): Promise<number> {
+    return await LessonModel.countDocuments({ course: courseId });
   }
 }

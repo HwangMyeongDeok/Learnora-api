@@ -1,32 +1,57 @@
-import { IsString, IsOptional, IsEnum, IsNumber, IsArray } from "class-validator";
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, IsArray, IsMongoId, Min } from "class-validator";
 import { CourseLevel, CourseStatus } from "../course.interface";
 
 export class CreateCourseDto {
+  @IsNotEmpty()
   @IsString()
   title!: string;
 
+  @IsNotEmpty()
   @IsString()
   description!: string;
 
-  @IsString()
-  slug!: string;
+  @IsNotEmpty()
+  @IsMongoId()
+  category!: string;
 
-  @IsNumber()
-  price!: number;
-
+  @IsNotEmpty()
   @IsEnum(CourseLevel)
   level!: CourseLevel;
 
+  @IsOptional() 
   @IsEnum(CourseStatus)
-  status!: CourseStatus;
+  status?: CourseStatus;
 
-  @IsString()
-  instructor!: string;
+  @IsNotEmpty()
+  @IsNumber()
+  @Min(0)
+  price!: number;
 
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discountPrice?: number;
+
+  @IsNotEmpty()
+  @IsString() 
+  thumbnail!: string;
+
+  @IsNotEmpty()
   @IsString()
-  category!: string;
+  language!: string;
 
   @IsOptional()
   @IsArray()
-  sections?: string[];
+  @IsString({ each: true })
+  tags?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  requirements?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  outcomes?: string[];
 }

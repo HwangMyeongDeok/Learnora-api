@@ -1,68 +1,71 @@
-import { IProgress, IProgressRepository } from "./progress.interface"; // Gộp interface
-
-// Giả sử em sẽ cần gọi các service khác khi tiến độ thay đổi
-// import { GamificationService } from "../gamification/gamification.service";
-// import { CertificateService } from "../certificate/certificate.service";
+import { IProgressRepository } from "./progress.interface";
+import { NotFoundError } from "../../core/error.response";
+import { GamificationService } from "../gamification/gamification.service";
+import { ILessonRepository } from "../lesson/lesson.interface";
 
 export class ProgressService {
   constructor(
     private readonly progressRepo: IProgressRepository,
-    // private readonly gamificationService: GamificationService,
-    // private readonly certificateService: CertificateService
+    private readonly lessonRepo: ILessonRepository,
+    private readonly gamificationService: GamificationService
   ) {}
 
-  // =================================================================
-  // 1. CREATE (Khởi tạo tiến độ)
-  // =================================================================
-  // Hàm này thường được gọi tự động ngay khi User đăng ký khóa học (Enrollment)
-  async createProgress(data: Partial<IProgress>): Promise<IProgress> {
-    // Mặc định khi tạo mới: completedLessons = [], percent = 0
+  async createInitialProgress(
+    userId: string,
+    courseId: string,
+    enrollmentId: string
+  ) {
     return await this.progressRepo.create({
-        ...data,
-        percent: 0,
-        completedLessons: []
+      user: userId,
+      course: courseId,
+      enrollment: enrollmentId,
+      completedLessons: [],
+      percentCompleted: 0,
     });
   }
 
-  // =================================================================
-  // 2. GET BY ENROLLMENT (Lấy tiến độ của 1 khóa học cụ thể)
-  // =================================================================
-  async getProgressByEnrollment(enrollmentId: string) {
-    return await this.progressRepo.findByEnrollment(enrollmentId);
+  async getProgress(userId: string, courseId: string) {
+    const progress = await this.progressRepo.findByUserAndCourse(
+      userId,
+      courseId
+    );
+    if (!progress)
+      throw new NotFoundError("Progress not found. Are you enrolled?");
+    return progress;
   }
 
-  // =================================================================
-  // 3. UPDATE (Cập nhật bài học đã hoàn thành) - QUAN TRỌNG NHẤT
-  // =================================================================
-  async updateProgress(id: string, data: Partial<IProgress>) {
-    // Bước 1: Cập nhật DB
-    const updatedProgress = await this.progressRepo.update(id, data);
+  async markLessonCompleted(
+    userId: string,
+    courseId: string,
+    lessonId: string
+  ) {
+    const progress = await this.progressRepo.addCompletedLesson(
+      userId,
+      courseId,
+      lessonId
+    );
+    if (!progress) throw new NotFoundError("Progress not found");
 
-    // Bước 2: [LOGIC NGHIỆP VỤ CAO CẤP]
-    if (updatedProgress) {
-        // A. Tính toán lại % hoàn thành
-        // const totalLessons = await this.courseRepo.countLessons(updatedProgress.courseId);
-        // const completedCount = updatedProgress.completedLessons.length;
-        // const newPercent = (completedCount / totalLessons) * 100;
-        
-        // B. Kiểm tra xem đã hoàn thành khóa học chưa?
-        // if (newPercent === 100 && !updatedProgress.isCompleted) {
-        //     // 1. Đánh dấu hoàn thành
-        //     await this.progressRepo.markAsCompleted(id);
-        //     // 2. Cấp chứng chỉ tự động
-        //     await this.certificateService.createCertificate({ ... });
-        //     // 3. Cộng điểm thưởng lớn
-        //     await this.gamificationService.addPoints(updatedProgress.userId, 1000);
-        // }
+    await this.gamificationService.earnPoints(userId, 10);
+
+    const totalLessons = await this.lessonRepo.countByCourse(courseId);
+
+    if (totalLessons === 0) {
+      return { ...progress, percentCompleted: 100 };
     }
 
-    return updatedProgress;
-  }
+    const completedCount = progress.completedLessons.length;
+    const percent = Math.min(
+      100,
+      Math.round((completedCount / totalLessons) * 100)
+    );
 
-  // =================================================================
-  // 4. DELETE
-  // =================================================================
-  async deleteProgress(id: string): Promise<void> {
-    await this.progressRepo.delete(id);
+    await this.progressRepo.updatePercent(progress._id as string, percent);
+
+    if (percent === 100) {
+      await this.gamificationService.earnPoints(userId, 100);
+    }
+
+    return { ...progress, percentCompleted: percent };
   }
 }

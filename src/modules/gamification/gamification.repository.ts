@@ -1,41 +1,38 @@
-import {
-  IGamification,
-  IBadge,
-} from "./gamification.interface";
-import { IGamificationRepository } from "../../domain/gamification/gamification.repository.interface";
-import { Gamification } from "./gamification.model";
+import { GamificationModel } from "./gamification.model";
+import { IGamification, IGamificationRepository, IBadge } from "./gamification.interface";
 
 export class GamificationRepository implements IGamificationRepository {
-  async getByUser(userId: string): Promise<IGamification | null> {
-    return await Gamification.findOne({ user: userId });
+  
+  async findOrCreate(userId: string): Promise<IGamification> {
+    return await GamificationModel.findOneAndUpdate(
+        { user: userId },
+        { $setOnInsert: { points: 0, badges: [] } },
+        { new: true, upsert: true }
+    ).lean<IGamification>();
   }
 
-  async addPoints(userId: string, points: number): Promise<IGamification> {
-    const gamification = await Gamification.findOneAndUpdate(
-      { user: userId },
-      { $inc: { points } },
-      { new: true, upsert: true }
-    );
-    return gamification;
+  async updatePoints(userId: string, points: number): Promise<IGamification> {
+    return await GamificationModel.findOneAndUpdate(
+        { user: userId },
+        { $inc: { points: points } }, 
+        { new: true, upsert: true }
+    ).lean<IGamification>();
   }
 
   async addBadge(userId: string, badge: IBadge): Promise<IGamification> {
-    const gamification = await Gamification.findOneAndUpdate(
-      { user: userId },
-      { $addToSet: { badges: badge } },
-      { new: true, upsert: true }
-    );
-    return gamification;
+    return await GamificationModel.findOneAndUpdate(
+        { user: userId },
+        { $push: { badges: badge } }, 
+        { new: true, upsert: true }
+    ).lean<IGamification>();
   }
 
-  async updatePoints(
-    userId: string,
-    points: number
-  ): Promise<IGamification | null> {
-    return await Gamification.findOneAndUpdate(
-      { user: userId },
-      { $set: { points } },
-      { new: true }
-    );
+  async findLeaderboard(limit: number): Promise<IGamification[]> {
+    return await GamificationModel.find()
+        .sort({ points: -1 }) 
+        .limit(limit)
+        .populate("user", "name avatar") 
+        .lean<IGamification[]>();
   }
+  
 }

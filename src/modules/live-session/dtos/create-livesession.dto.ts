@@ -1,28 +1,27 @@
-import { IsDateString, IsEnum, IsString } from "class-validator";
-import { LiveSessionStatus } from "../live-session.interface";
+import { IsString, IsNotEmpty, IsDateString, IsMongoId, IsOptional } from "class-validator";
 
 export class CreateLiveSessionDto {
-  @IsString()
-  course!: string;
+  @IsNotEmpty()
+  @IsMongoId()
+  courseId!: string;
 
-  @IsString()
-  instructor!: string;
-
+  @IsNotEmpty()
   @IsString()
   title!: string;
 
+  @IsOptional()
   @IsString()
-  description!: string;
+  description?: string;
 
+  @IsNotEmpty()
   @IsDateString()
   startTime!: string;
 
+  @IsOptional()
   @IsDateString()
-  endTime!: string;
+  endTime?: string;
 
-  @IsEnum(LiveSessionStatus)
-  status!: LiveSessionStatus;
-
+  @IsNotEmpty()
   @IsString()
   streamUrl!: string;
 }

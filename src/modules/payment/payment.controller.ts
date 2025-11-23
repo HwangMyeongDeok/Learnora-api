@@ -1,26 +1,56 @@
-import { Request, Response } from "express";
-import { PaymentRepository } from "./payment.repository";
-import { CreatePaymentUseCase } from "./create-payment.usecase";
-import { GetUserPaymentsUseCase } from "./get-user-payments.usecase";
-import { GetPaymentByTransactionIdUseCase } from "./get-payment-by-txid.usecase";
+import { Request, Response, NextFunction } from "express";
+import { PaymentService } from "./payment.service";
+import { CREATED, OK } from "../../core/success.response";
 
-const repo = new PaymentRepository();
+export class PaymentController {
+  constructor(private readonly paymentService: PaymentService) {}
 
-export const createPayment = async (req: Request, res: Response) => {
-  const usecase = new CreatePaymentUseCase(repo);
-  const result = await usecase.execute({ ...req.body, user: req.user?.userId });
-  res.status(201).json(result);
-};
+  create = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const { courseId, gateway } = req.body;
 
-export const getUserPayments = async (req: Request, res: Response) => {
-  const usecase = new GetUserPaymentsUseCase(repo);
-  const result = await usecase.execute(req.user!.userId);
-  res.status(200).json(result);
-};
+      const result = await this.paymentService.createPaymentUrl(
+        req.user.userId,
+        courseId,
+        gateway
+      );
 
-export const getPaymentByTxId = async (req: Request, res: Response) => {
-  const usecase = new GetPaymentByTransactionIdUseCase(repo);
-  const result = await usecase.execute(req.params.txId);
-  if (!result) res.status(404).json({ message: "Not found" });
-  res.status(200).json(result);
-};
+      new CREATED({
+        message: "Payment initialized",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  mockWebhook = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { transactionId } = req.body;
+      
+      const result = await this.paymentService.handlePaymentSuccess(transactionId);
+
+      new OK({
+        message: "Payment processed successfully",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+  
+  getHistory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+        const result = await this.paymentService.getMyHistory(req.user.userId);
+        new OK({
+            message: "Get history success",
+            metadata: result
+        }).send(res);
+    } catch (error) {
+        next(error);
+    }
+  }
+}

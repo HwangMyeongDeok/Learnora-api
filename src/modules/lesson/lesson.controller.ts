@@ -1,33 +1,73 @@
-import { Request, Response } from "express";
-import { LessonRepository } from "./lesson.repository";
-import { CreateLessonUseCase } from "./create-lesson.usecase";
-import { UpdateLessonUseCase } from "./update-lesson.usecase";
-import { GetLessonsByCourseUseCase } from "./get-lessons-by-course.usecase";
-import { DeleteLessonUseCase } from "./delete-lesson.usecase";
+import { Request, Response, NextFunction } from "express";
+import { LessonService } from "./lesson.service";
+import { CREATED, OK } from "../../core/success.response";
 
-const lessonRepo = new LessonRepository();
+export class LessonController {
+  constructor(private readonly lessonService: LessonService) {}
 
-export const createLesson = async (req: Request, res: Response) => {
-  const usecase = new CreateLessonUseCase(lessonRepo);
-  const result = await usecase.execute(req.body);
-  res.status(201).json(result);
-};
+  create = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const result = await this.lessonService.createLesson(req.body);
+      new CREATED({
+        message: "Lesson created",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const getLessonsByCourse = async (req: Request, res: Response) => {
-  const usecase = new GetLessonsByCourseUseCase(lessonRepo);
-  const lessons = await usecase.execute(req.params.courseId);
-  res.status(200).json(lessons);
-};
+  update = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const result = await this.lessonService.updateLesson(id, req.body);
+      new OK({
+        message: "Lesson updated",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const updateLesson = async (req: Request, res: Response) => {
-  const usecase = new UpdateLessonUseCase(lessonRepo);
-  const updated = await usecase.execute(req.params.id, req.body);
-  if (!updated) res.status(404).json({ message: "Lesson not found" });
-  res.status(200).json(updated);
-};
+  delete = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      await this.lessonService.deleteLesson(id);
+      new OK({
+        message: "Lesson deleted",
+        metadata: {},
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const deleteLesson = async (req: Request, res: Response) => {
-  const usecase = new DeleteLessonUseCase(lessonRepo);
-  await usecase.execute(req.params.id);
-  res.status(204).send();
-};
+  getOne = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const result = await this.lessonService.getLessonById(id);
+      new OK({
+        message: "Get lesson success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+  
+  getBySection = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { sectionId } = req.params;
+      const result = await this.lessonService.getLessonsBySection(sectionId);
+      new OK({
+        message: "Get lessons by section success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+}

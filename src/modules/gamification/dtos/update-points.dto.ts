@@ -1,7 +1,21 @@
-import { IsInt, Min } from "class-validator";
+import { IsNotEmpty, IsNumber, IsString, IsMongoId } from "class-validator";
 
 export class UpdatePointsDto {
-  @IsInt()
-  @Min(0)
-  points!: number;
+  @IsNotEmpty()
+  @IsNumber()
+  points!: number; 
+}
+
+export class EarnBadgeDto {
+  @IsNotEmpty()
+  @IsString()
+  badgeName!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  description!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  icon!: string;
 }

@@ -1,21 +1,30 @@
 import { Router } from "express";
-import {
-  createLesson,
-  getLessonsByCourse,
-  updateLesson,
-  deleteLesson,
-} from "./lesson.controller";
+import { LessonController } from "./lesson.controller";
+import { LessonService } from "./lesson.service";
+import { LessonRepository } from "./lesson.repository";
 
-import { validateMiddleware } from "../../middleware/validation";
 import { isAuthenticated } from "../../middleware/isAuthenticated";
+import { validateMiddleware } from "../../middleware/validation";
 import { CreateLessonDto } from "./dtos/create-lesson.dto";
-import { UpdateLessonDto } from "./dtos/update-lesson.dto";
 
 const router = Router();
 
-router.post("/", isAuthenticated, validateMiddleware(CreateLessonDto), createLesson);
-router.get("/:courseId", getLessonsByCourse);
-router.put("/:id", isAuthenticated, validateMiddleware(UpdateLessonDto), updateLesson);
-router.delete("/:id", isAuthenticated, deleteLesson);
+const lessonRepo = new LessonRepository();
+const lessonService = new LessonService(lessonRepo);
+const lessonController = new LessonController(lessonService);
+
+
+router.get("/section/:sectionId", lessonController.getBySection);
+router.get("/:id", lessonController.getOne);
+
+router.post(
+    "/", 
+    isAuthenticated, 
+    validateMiddleware(CreateLessonDto), 
+    lessonController.create
+);
+
+router.patch("/:id", isAuthenticated, lessonController.update);
+router.delete("/:id", isAuthenticated, lessonController.delete);
 
 export default router;

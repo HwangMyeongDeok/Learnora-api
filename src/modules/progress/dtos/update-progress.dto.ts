@@ -1,19 +1,11 @@
-import { IsOptional, IsBoolean, IsNumber } from "class-validator";
+import { IsMongoId, IsNotEmpty } from "class-validator";
 
-export class UpdateProgressDto {
-  @IsOptional()
-  @IsBoolean()
-  completed?: boolean;
+export class MarkLessonCompletedDto {
+  @IsNotEmpty()
+  @IsMongoId()
+  lessonId!: string;
 
-  @IsOptional()
-  @IsNumber()
-  score?: number;
-
-  @IsOptional()
-  @IsNumber()
-  durationWatched?: number;
-
-  @IsOptional()
-  @IsNumber()
-  percent?: number;
+  @IsNotEmpty()
+  @IsMongoId()
+  courseId!: string;
 }
