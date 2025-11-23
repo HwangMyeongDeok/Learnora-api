@@ -1,41 +1,35 @@
-import { Request, Response } from "express";
-import { GetUserUseCase } from "./get-user.usecase";
-import { UpdateUserUseCase } from "./update-user.usecase";
-import { DeleteUserUseCase } from "./delete-user.usecase";
-import { CreateUserUseCase } from "./create-user.usecase";
-import { UserRepository } from "./user.repository";
-import ErrorHandler from "../../middleware/ErrorHandler";
+import { Request, Response, NextFunction } from "express";
+import { UserService } from "./user.service";
+import { OK } from "../../core/success.response";
 
-const userRepo = new UserRepository();
+export class UserController {
+  constructor(private readonly userService: UserService) {}
 
-const createUserUseCase = new CreateUserUseCase(userRepo);
-const getUserUseCase = new GetUserUseCase(userRepo);
-const updateUserUseCase = new UpdateUserUseCase(userRepo);
-const deleteUserUseCase = new DeleteUserUseCase(userRepo);
+  getMe = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const result = await this.userService.getMyProfile(req.user.userId);
+      new OK({
+        message: "Get profile success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const createUserController = async (req: Request, res: Response) => {
-  const user = await createUserUseCase.execute(req.body);
-  res.status(201).json(user);
-};
-
-export const getAllUsersController = async (_: Request, res: Response) => {
-  const users = await getUserUseCase.findAll();
-  res.json(users);
-};
-
-export const getUserByIdController = async (req: Request, res: Response) => {
-  const user = await getUserUseCase.findById(req.params.id);
-  if (!user) throw new ErrorHandler("User not found", 404);
-  res.json(user);
-};
-
-export const updateUserController = async (req: Request, res: Response) => {
-  const updated = await updateUserUseCase.execute(req.params.id, req.body);
-  if (!updated) throw new ErrorHandler("User not found", 404);
-  res.json(updated);
-};
-
-export const deleteUserController = async (req: Request, res: Response) => {
-  await deleteUserUseCase.execute(req.params.id);
-  res.status(204).send();
-};
+  updateMe = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const result = await this.userService.updateProfile(req.user.userId, req.body);
+      new OK({
+        message: "Profile updated",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+}

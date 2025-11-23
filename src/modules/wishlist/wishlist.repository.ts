@@ -1,33 +1,31 @@
-import { IWishlist } from "./wishlist.interface";
-import { IWishlistRepository } from "../../domain/wishlist/wishlist.repository.interface";
-import { Wishlist } from "./wishlist.model";
+import { WishlistModel } from "./wishlist.model";
+import { IWishlist, IWishlistRepository } from "./wishlist.interface";
 
 export class WishlistRepository implements IWishlistRepository {
-  async create(data: Partial<IWishlist>): Promise<IWishlist> {
-    return await Wishlist.create(data);
+  
+  async getByUser(userId: string): Promise<IWishlist | null> {
+    return await WishlistModel.findOne({ user: userId })
+        .populate("courses", "title thumbnail price slug instructor averageRating") 
+        .lean<IWishlist>();
   }
 
-  async findByUser(userId: string): Promise<IWishlist | null> {
-    return await Wishlist.findOne({ user: userId }).populate("courses");
-  }
-
-  async addCourse(userId: string, courseId: string): Promise<IWishlist | null> {
-    return await Wishlist.findOneAndUpdate(
+  async addCourse(userId: string, courseId: string): Promise<IWishlist> {
+    return await WishlistModel.findOneAndUpdate(
       { user: userId },
       { $addToSet: { courses: courseId } },
-      { new: true, upsert: true }
-    ).populate("courses");
+      { new: true, upsert: true } 
+    )
+    .populate("courses", "title thumbnail price")
+    .lean<IWishlist>();
   }
 
   async removeCourse(userId: string, courseId: string): Promise<IWishlist | null> {
-    return await Wishlist.findOneAndUpdate(
+    return await WishlistModel.findOneAndUpdate(
       { user: userId },
       { $pull: { courses: courseId } },
       { new: true }
-    ).populate("courses");
-  }
-
-  async delete(id: string): Promise<void> {
-    await Wishlist.findByIdAndDelete(id);
+    )
+    .populate("courses", "title thumbnail price")
+    .lean<IWishlist>();
   }
 }

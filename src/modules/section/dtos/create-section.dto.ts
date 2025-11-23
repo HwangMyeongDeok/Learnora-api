@@ -1,23 +1,19 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsArray } from "class-validator";
+import { IsNotEmpty, IsString, IsMongoId, IsNumber, IsOptional } from "class-validator";
 
 export class CreateSectionDto {
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   title!: string;
 
   @IsOptional()
   @IsString()
-  description?: string;
+  description!: string;
 
-  @IsString()
   @IsNotEmpty()
-  course!: string;
+  @IsMongoId()
+  courseId!: string;
 
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  lectures?: string[];
-
+  @IsNotEmpty()
   @IsNumber()
   order!: number;
 }

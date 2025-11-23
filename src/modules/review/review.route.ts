@@ -1,20 +1,31 @@
 import { Router } from "express";
-import {
-  createReview,
-  getReviewsByCourse,
-  updateReview,
-  deleteReview,
-} from "./review.controller";
-import { validateMiddleware } from "../../middleware/validation";
+import { ReviewController } from "./review.controller";
+import { ReviewService } from "./review.service";
+import { ReviewRepository } from "./review.repository";
+import { EnrollmentRepository } from "../enrollment/enrollment.repository";
+import { CourseRepository } from "../course/course.repository";
+
 import { isAuthenticated } from "../../middleware/isAuthenticated";
+import { validateMiddleware } from "../../middleware/validation";
 import { CreateReviewDto } from "./dtos/create-review.dto";
-import { UpdateReviewDto } from "./dtos/update-review.dto";
 
 const router = Router();
 
-router.post("/", isAuthenticated, validateMiddleware(CreateReviewDto), createReview);
-router.get("/:courseId", getReviewsByCourse);
-router.put("/:id", isAuthenticated, validateMiddleware(UpdateReviewDto), updateReview);
-router.delete("/:id", isAuthenticated, deleteReview);
+const reviewRepo = new ReviewRepository();
+const enrollmentRepo = new EnrollmentRepository();
+const courseRepo = new CourseRepository();
+
+const reviewService = new ReviewService(reviewRepo, enrollmentRepo, courseRepo);
+const reviewController = new ReviewController(reviewService);
+
+
+router.get("/course/:courseId", reviewController.getByCourse);
+
+router.post(
+    "/", 
+    isAuthenticated, 
+    validateMiddleware(CreateReviewDto), 
+    reviewController.create
+);
 
 export default router;

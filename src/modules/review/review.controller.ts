@@ -1,33 +1,34 @@
-import { Request, Response } from "express";
-import { ReviewRepository } from "./review.repository";
-import { CreateReviewUseCase } from "./create-review.usecase";
-import { GetReviewsByCourseUseCase } from "./get-reviews-by-course.usecase";
-import { UpdateReviewUseCase } from "./update-review.usecase";
-import { DeleteReviewUseCase } from "./delete-review.usecase";
+import { Request, Response, NextFunction } from "express";
+import { ReviewService } from "./review.service";
+import { CREATED, OK } from "../../core/success.response";
 
-const repo = new ReviewRepository();
+export class ReviewController {
+  constructor(private readonly reviewService: ReviewService) {}
 
-export const createReview = async (req: Request, res: Response) => {
-  const usecase = new CreateReviewUseCase(repo);
-  const result = await usecase.execute(req.body);
-  res.status(201).json(result);
-};
+  create = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const result = await this.reviewService.createReview(req.user.userId, req.body);
+      new CREATED({
+        message: "Review submitted",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const getReviewsByCourse = async (req: Request, res: Response) => {
-  const usecase = new GetReviewsByCourseUseCase(repo);
-  const result = await usecase.execute(req.params.courseId);
-  res.status(200).json(result);
-};
-
-export const updateReview = async (req: Request, res: Response) => {
-  const usecase = new UpdateReviewUseCase(repo);
-  const updated = await usecase.execute(req.params.id, req.body);
-  if (!updated) res.status(404).json({ message: "Review not found" });
-  res.status(200).json(updated);
-};
-
-export const deleteReview = async (req: Request, res: Response) => {
-  const usecase = new DeleteReviewUseCase(repo);
-  await usecase.execute(req.params.id);
-  res.status(204).send();
-};
+  getByCourse = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { courseId } = req.params;
+      const result = await this.reviewService.getReviewsByCourse(courseId, req.query);
+      new OK({
+        message: "Get reviews success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+}

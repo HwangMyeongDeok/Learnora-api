@@ -1,25 +1,53 @@
-import { Request, Response } from "express";
-import { WishlistRepository } from "./wishlist.repository";
-import { AddCourseToWishlistUseCase } from "./add-course-to-wishlist.usecase";
-import { RemoveCourseFromWishlistUseCase } from "./remove-course-from-wishlist.usecase";
-import { GetWishlistUseCase } from "./get-wishlist.usecase";
+import { Request, Response, NextFunction } from "express";
+import { WishlistService } from "./wishlist.service";
+import { CREATED, OK } from "../../core/success.response";
 
-const repo = new WishlistRepository();
+export class WishlistController {
+  constructor(private readonly wishlistService: WishlistService) {}
 
-export const addCourseToWishlist = async (req: Request, res: Response) => {
-  const usecase = new AddCourseToWishlistUseCase(repo);
-  const result = await usecase.execute(req.user!.userId, req.body.courseId);
-  res.status(200).json(result);
-};
+  getMe = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const result = await this.wishlistService.getMyWishlist(req.user.userId);
+      new OK({
+        message: "Get wishlist success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const removeCourseFromWishlist = async (req: Request, res: Response) => {
-  const usecase = new RemoveCourseFromWishlistUseCase(repo);
-  const result = await usecase.execute(req.user!.userId, req.params.courseId);
-  res.status(200).json(result);
-};
+  add = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const { courseId } = req.body;
+      const result = await this.wishlistService.addToWishlist(req.user.userId, courseId);
+      
+      new CREATED({
+        message: "Added to wishlist",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const getWishlist = async (req: Request, res: Response) => {
-  const usecase = new GetWishlistUseCase(repo);
-  const result = await usecase.execute(req.user!.userId);
-  res.status(200).json(result);
-};
+  remove = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const { courseId } = req.params;
+      const result = await this.wishlistService.removeFromWishlist(req.user.userId, courseId);
+      
+      new OK({
+        message: "Removed from wishlist",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+}

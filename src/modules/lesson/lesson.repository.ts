@@ -28,4 +28,8 @@ export class LessonRepository implements ILessonRepository {
   async countByCourse(courseId: string): Promise<number> {
     return await LessonModel.countDocuments({ course: courseId });
   }
+  
+  async deleteManyBySection(sectionId: string): Promise<void> {
+    await LessonModel.deleteMany({ section: sectionId });
+  }
 }

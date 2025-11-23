@@ -1,5 +1,8 @@
 import { Schema, model } from "mongoose";
-import { IQuiz, IQuestion } from "./quiz.interface";
+import { IQuestion, IQuiz } from "./quiz.interface";
+
+const DOCUMENT_NAME = "Quiz";
+const COLLECTION_NAME = "Quizzes";
 
 const questionSchema = new Schema<IQuestion>(
   {
@@ -8,18 +11,25 @@ const questionSchema = new Schema<IQuestion>(
     correctAnswer: [{ type: Number, required: true }],
     explanation: { type: String },
   },
-  { timestamps: true, _id: false }
+  { _id: false } 
 );
 
 const quizSchema = new Schema<IQuiz>(
   {
     title: { type: String, required: true },
     questions: [questionSchema],
-    lecture: { type: Schema.Types.ObjectId, ref: "Lecture", required: true },
-    timeLimit: { type: Number },
-    passingScore: { type: Number, required: true },
+    
+    lesson: { type: Schema.Types.ObjectId, ref: "Lesson", required: true },
+    
+    timeLimit: { type: Number, default: 0 },
+    passingScore: { type: Number, required: true, default: 80 },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    collection: COLLECTION_NAME
+  }
 );
 
-export const Quiz = model<IQuiz>("Quiz", quizSchema);
+quizSchema.index({ lesson: 1 });
+
+export const QuizModel = model<IQuiz>(DOCUMENT_NAME, quizSchema);

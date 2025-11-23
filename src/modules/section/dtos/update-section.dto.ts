@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsNumber, IsArray } from "class-validator";
+import { IsString, IsNumber, IsOptional } from "class-validator";
 
 export class UpdateSectionDto {
   @IsOptional()
@@ -8,11 +8,6 @@ export class UpdateSectionDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  lectures?: string[];
 
   @IsOptional()
   @IsNumber()

@@ -1,21 +1,24 @@
-import { catchAsyncError } from '../../middleware/catchAsyncError';
 import { Router } from "express";
-import {
-  createUserController,
-  getAllUsersController,
-  getUserByIdController,
-  updateUserController,
-  deleteUserController,
-} from "./user.controller";
+import { UserController } from "./user.controller";
+import { UserService } from "./user.service";
+import { UserRepository } from "./user.repository";
+import { isAuthenticated } from "../../middleware/isAuthenticated";
 import { validateMiddleware } from "../../middleware/validation";
-import { RegisterDto } from "../auth/dtos/register.dto";
+import { UpdateUserDto } from "./dtos/update-user.dto";
 
 const router = Router();
 
-router.post("/", validateMiddleware(RegisterDto), catchAsyncError(createUserController));
-router.get("/", catchAsyncError(getAllUsersController));
-router.get("/:id", catchAsyncError(getUserByIdController));
-router.put("/:id", catchAsyncError(updateUserController));
-router.delete("/:id", catchAsyncError(deleteUserController));
+const userRepo = new UserRepository();
+const userService = new UserService(userRepo);
+const userController = new UserController(userService);
+
+router.get("/me", isAuthenticated, userController.getMe);
+
+router.patch(
+    "/me", 
+    isAuthenticated, 
+    validateMiddleware(UpdateUserDto), 
+    userController.updateMe
+);
 
 export default router;

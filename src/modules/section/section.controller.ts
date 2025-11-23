@@ -1,33 +1,60 @@
-import { Request, Response } from "express";
-import { SectionRepository } from "./section.repository";
-import { CreateSectionUseCase } from "./create-section.usecase";
-import { GetSectionByCourseUseCase } from "./get-section-by-course.usecase";
-import { UpdateSectionUseCase } from "./update-section.usecase";
-import { DeleteSectionUseCase } from "./delete-section.usecase";
+import { Request, Response, NextFunction } from "express";
+import { SectionService } from "./section.service";
+import { CREATED, OK } from "../../core/success.response";
 
-const sectionRepo = new SectionRepository();
+export class SectionController {
+  constructor(private readonly sectionService: SectionService) {}
 
-export const createSection = async (req: Request, res: Response) => {
-  const usecase = new CreateSectionUseCase(sectionRepo);
-  const result = await usecase.execute(req.body);
-  res.status(201).json(result);
-};
+  create = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const result = await this.sectionService.createSection(req.body);
+      new CREATED({
+        message: "Section created",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const getSectionsByCourse = async (req: Request, res: Response) => {
-  const usecase = new GetSectionByCourseUseCase(sectionRepo);
-  const sections = await usecase.execute(req.params.courseId);
-  res.status(200).json(sections);
-};
+  update = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const result = await this.sectionService.updateSection(id, req.body);
+      new OK({
+        message: "Section updated",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const updateSection = async (req: Request, res: Response) => {
-  const usecase = new UpdateSectionUseCase(sectionRepo);
-  const updated = await usecase.execute(req.params.id, req.body);
-  if (!updated) res.status(404).json({ message: "Section not found" });
-  res.status(200).json(updated);
-};
+  delete = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      await this.sectionService.deleteSection(id);
+      new OK({
+        message: "Section deleted",
+        metadata: {},
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const deleteSection = async (req: Request, res: Response) => {
-  const usecase = new DeleteSectionUseCase(sectionRepo);
-  await usecase.execute(req.params.id);
-  res.status(204).send();
-};
+  getByCourse = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { courseId } = req.params;
+      const result = await this.sectionService.getSectionsByCourse(courseId);
+      new OK({
+        message: "Get sections success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+}

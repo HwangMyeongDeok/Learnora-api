@@ -1,33 +1,52 @@
-import { Request, Response } from "express";
-import { QuizRepository } from "./quiz.repository";
-import { CreateQuizUseCase } from "./create-quiz.usecase";
-import { GetQuizzesByLectureUseCase } from "./get-quizzes-by-lecture.usecase";
-import { UpdateQuizUseCase } from "./update-quiz.usecase";
-import { DeleteQuizUseCase } from "./delete-quiz.usecase";
+import { Request, Response, NextFunction } from "express";
+import { QuizService } from "./quiz.service";
+import { CREATED, OK } from "../../core/success.response";
 
-const quizRepo = new QuizRepository();
+export class QuizController {
+  constructor(private readonly quizService: QuizService) {}
 
-export const createQuiz = async (req: Request, res: Response) => {
-  const usecase = new CreateQuizUseCase(quizRepo);
-  const result = await usecase.execute(req.body);
-  res.status(201).json(result);
-};
+  create = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.quizService.createQuiz(req.body);
+      new CREATED({
+        message: "Quiz created",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const getQuizzesByLecture = async (req: Request, res: Response) => {
-  const usecase = new GetQuizzesByLectureUseCase(quizRepo);
-  const quizzes = await usecase.execute(req.params.lectureId);
-  res.status(200).json(quizzes);
-};
+  getByLesson = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { lessonId } = req.params;
+      const result = await this.quizService.getQuizByLesson(lessonId);
+      new OK({
+        message: "Get quiz success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const updateQuiz = async (req: Request, res: Response) => {
-  const usecase = new UpdateQuizUseCase(quizRepo);
-  const updated = await usecase.execute(req.params.id, req.body);
-  if (!updated) res.status(404).json({ message: "Quiz not found" });
-  res.status(200).json(updated);
-};
-
-export const deleteQuiz = async (req: Request, res: Response) => {
-  const usecase = new DeleteQuizUseCase(quizRepo);
-  await usecase.execute(req.params.id);
-  res.status(204).send();
-};
+  submit = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const { quizId, userAnswers } = req.body;
+      const result = await this.quizService.submitQuiz(
+          req.user.userId, 
+          quizId, 
+          userAnswers
+      );
+      
+      new OK({
+        message: "Quiz submitted",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+}

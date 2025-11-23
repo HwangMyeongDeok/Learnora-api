@@ -1,14 +1,14 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested, IsNumber } from "class-validator";
 import { Type } from "class-transformer";
+import { IsString, IsNotEmpty, IsMongoId, IsNumber, IsArray, ValidateNested, Min, IsOptional } from "class-validator";
 
 class QuestionDto {
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   question!: string;
 
   @IsArray()
   @IsString({ each: true })
-  options!: string[];
+  options!: string[]; 
 
   @IsArray()
   @IsNumber({}, { each: true })
@@ -20,22 +20,25 @@ class QuestionDto {
 }
 
 export class CreateQuizDto {
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   title!: string;
+
+  @IsNotEmpty()
+  @IsMongoId()
+  lessonId!: string; 
+
+  @IsOptional()
+  @IsNumber()
+  timeLimit?: number; 
+
+  @IsNotEmpty()
+  @IsNumber()
+  @Min(0)
+  passingScore!: number;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => QuestionDto)
   questions!: QuestionDto[];
-
-  @IsString()
-  lecture!: string;
-
-  @IsOptional()
-  @IsNumber()
-  timeLimit?: number;
-
-  @IsNumber()
-  passingScore!: number;
 }

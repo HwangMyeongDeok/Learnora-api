@@ -35,4 +35,5 @@ export interface ILessonRepository {
   findBySection(sectionId: string): Promise<ILesson[]>;
   
   countByCourse(courseId: string): Promise<number>;
+  deleteManyBySection(sectionId: string): Promise<void>;
 }

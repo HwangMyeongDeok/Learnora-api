@@ -1,21 +1,48 @@
 import { Router } from "express";
-import {
-  createQuiz,
-  getQuizzesByLecture,
-  updateQuiz,
-  deleteQuiz,
-} from "./quiz.controller";
+import { QuizController } from "./quiz.controller";
+import { QuizService } from "./quiz.service";
+import { QuizRepository } from "./quiz.repository";
 
-import { validateMiddleware } from "../../middleware/validation";
+// Dependencies
+import { ProgressService } from "../progress/progress.service";
+import { ProgressRepository } from "../progress/progress.repository";
+import { GamificationService } from "../gamification/gamification.service";
+import { GamificationRepository } from "../gamification/gamification.repository";
+import { LessonRepository } from "../lesson/lesson.repository";
+
 import { isAuthenticated } from "../../middleware/isAuthenticated";
+import { validateMiddleware } from "../../middleware/validation";
 import { CreateQuizDto } from "./dtos/create-quiz.dto";
-import { UpdateQuizDto } from "./dtos/update-quiz.dto";
+import { SubmitQuizDto } from "./dtos/submit-quiz.dto";
 
 const router = Router();
 
-router.post("/", isAuthenticated, validateMiddleware(CreateQuizDto), createQuiz);
-router.get("/:lectureId", getQuizzesByLecture);
-router.put("/:id", isAuthenticated, validateMiddleware(UpdateQuizDto), updateQuiz);
-router.delete("/:id", isAuthenticated, deleteQuiz);
+const lessonRepo = new LessonRepository();
+const progressRepo = new ProgressRepository();
+const gamiRepo = new GamificationRepository();
+
+const gamiService = new GamificationService(gamiRepo);
+const progressService = new ProgressService(progressRepo, lessonRepo, gamiService);
+
+const quizRepo = new QuizRepository();
+const quizService = new QuizService(quizRepo, progressService, gamiService);
+const quizController = new QuizController(quizService);
+
+
+router.get("/lesson/:lessonId", isAuthenticated, quizController.getByLesson);
+
+router.post(
+    "/", 
+    isAuthenticated, 
+    validateMiddleware(CreateQuizDto), 
+    quizController.create
+);
+
+router.post(
+    "/submit", 
+    isAuthenticated, 
+    validateMiddleware(SubmitQuizDto), 
+    quizController.submit
+);
 
 export default router;

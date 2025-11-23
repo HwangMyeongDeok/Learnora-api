@@ -1,25 +1,25 @@
-import { IQuiz } from "./quiz.interface";
-import { IQuizRepository } from "../../domain/quiz/quiz.repository.interface";
-import { Quiz } from "./quiz.model";
+import { QuizModel } from "./quiz.model";
+import { IQuiz, IQuizRepository } from "./quiz.interface";
 
 export class QuizRepository implements IQuizRepository {
-  async create(data: Partial<IQuiz>): Promise<IQuiz> {
-    return await Quiz.create(data);
+  
+  async create(data: any): Promise<IQuiz> {
+    return await QuizModel.create(data);
   }
 
   async findById(id: string): Promise<IQuiz | null> {
-    return await Quiz.findById(id).populate("lecture");
+    return await QuizModel.findById(id).lean<IQuiz>();
   }
 
-  async findByLecture(lectureId: string): Promise<IQuiz[]> {
-    return await Quiz.find({ lecture: lectureId }).sort({ createdAt: 1 });
+  async findByLesson(lessonId: string): Promise<IQuiz | null> {
+    return await QuizModel.findOne({ lesson: lessonId }).lean<IQuiz>();
   }
 
-  async update(id: string, data: Partial<IQuiz>): Promise<IQuiz | null> {
-    return await Quiz.findByIdAndUpdate(id, data, { new: true });
+  async update(id: string, data: any): Promise<IQuiz | null> {
+    return await QuizModel.findByIdAndUpdate(id, data, { new: true }).lean<IQuiz>();
   }
 
   async delete(id: string): Promise<void> {
-    await Quiz.findByIdAndDelete(id);
+    await QuizModel.findByIdAndDelete(id);
   }
 }
