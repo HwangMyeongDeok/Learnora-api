@@ -1,5 +1,5 @@
 import { IsOptional, IsString, IsEnum, IsDateString } from "class-validator";
-import { LiveSessionStatus } from "../live-session..interface";
+import { LiveSessionStatus } from "../live-session.interface";
 
 export class UpdateLiveSessionDto {
   @IsOptional()

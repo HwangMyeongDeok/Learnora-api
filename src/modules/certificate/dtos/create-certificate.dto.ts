@@ -1,12 +1,11 @@
-import { IsString } from "class-validator";
+import { IsMongoId, IsNotEmpty, IsString, IsUrl } from "class-validator";
 
 export class CreateCertificateDto {
-  @IsString()
-  user!: string;
+  @IsNotEmpty()
+  @IsMongoId()
+  courseId!: string;
 
-  @IsString()
-  course!: string;
-
+  @IsNotEmpty()
   @IsString()
   certificateUrl!: string;
 }

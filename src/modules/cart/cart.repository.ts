@@ -1,31 +1,38 @@
-import { ICart } from "./cart.interface";
-import { ICartRepository } from "../../domain/cart/cart.repositoryinterface.";
-import { Cart } from "./cart.model";
+import { CartModel } from "./cart.model";
+import { ICart, ICartRepository } from "./cart.interface";
 
 export class CartRepository implements ICartRepository {
+  
   async getByUser(userId: string): Promise<ICart | null> {
-    return await Cart.findOne({ user: userId }).populate("courses");
+    return await CartModel.findOne({ user: userId })
+        .populate("courses", "title thumbnail price slug instructor")
+        .lean<ICart>();
   }
 
   async addToCart(userId: string, courseId: string): Promise<ICart> {
-    const cart = await Cart.findOneAndUpdate(
+    return await CartModel.findOneAndUpdate(
       { user: userId },
       { $addToSet: { courses: courseId } },
       { new: true, upsert: true }
-    ).populate("courses");
-    return cart;
+    )
+    .populate("courses", "title price")
+    .lean<ICart>();
   }
 
   async removeFromCart(userId: string, courseId: string): Promise<ICart | null> {
-    const cart = await Cart.findOneAndUpdate(
+    return await CartModel.findOneAndUpdate(
       { user: userId },
       { $pull: { courses: courseId } },
       { new: true }
-    ).populate("courses");
-    return cart;
+    )
+    .populate("courses", "title price")
+    .lean<ICart>();
   }
 
   async clearCart(userId: string): Promise<void> {
-    await Cart.findOneAndUpdate({ user: userId }, { $set: { courses: [] } });
+    await CartModel.findOneAndUpdate(
+        { user: userId }, 
+        { $set: { courses: [] } }
+    );
   }
 }

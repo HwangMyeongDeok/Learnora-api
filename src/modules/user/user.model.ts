@@ -11,8 +11,8 @@ const userSchema = new Schema<IUser>(
     bio: { type: String },
     socialLinks: [{ platform: String, url: String }],
     authType: { type: String, enum: ['local', 'google', 'facebook'], default: 'local' },
-    googleId: { type: String }, // ID từ Google
-    facebookId: { type: String }, // ID từ Facebook
+    googleId: { type: String },
+    facebookId: { type: String },
     isVerified: { type: Boolean, default: false }
   },
   { timestamps: true }

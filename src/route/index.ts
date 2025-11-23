@@ -11,7 +11,7 @@ import certificateRoutes from "../modules/certificate/certificate.route";
 import wishlistRoutes from "../modules/wishlist/wishlist.route";
 import notificationRoutes from "../modules/notification/notification.route";
 import commentRoutes from "../modules/comment/comment.route";
-import liveSessionRoutes from "../modules/live-session/live-session..route";
+import liveSessionRoutes from "../modules/live-session/live-session.route";
 import paymentRoutes from "../modules/payment/payment.route";
 import cartRoutes from "../modules/cart/cart.route";
 import categoryRoutes from "../modules/category/category.route";

@@ -1,4 +1,4 @@
-import { ILiveSession, ILiveSessionRepository } from "./live-session..interface"; // Gộp interface
+import { ILiveSession, ILiveSessionRepository } from "./live-session.interface"; // Gộp interface
 
 export class LiveSessionService {
   constructor(private readonly liveSessionRepo: ILiveSessionRepository) {}

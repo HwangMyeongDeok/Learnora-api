@@ -1,32 +1,56 @@
-import { Request, Response } from "express";
-import { CertificateRepository } from "./certificate.repository";
-import { CreateCertificateUseCase } from "./create-certificate.usecase";
-import { GetCertificatesByUserUseCase } from "./get-certificates-by-user.usecase";
-import { GetCertificatesByCourseUseCase } from "./get-certificates-by-course.usecase";
-import { DeleteCertificateUseCase } from "./delete-certificate.usecase";
+import { Request, Response, NextFunction } from "express";
+import { CertificateService } from "./certificate.service";
+import { CREATED, OK } from "../../core/success.response";
 
-const repo = new CertificateRepository();
+export class CertificateController {
+  constructor(private readonly certificateService: CertificateService) {}
 
-export const createCertificate = async (req: Request, res: Response) => {
-  const usecase = new CreateCertificateUseCase(repo);
-  const result = await usecase.execute(req.body);
-  res.status(201).json(result);
-};
+  issue = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      const { courseId, certificateUrl } = req.body;
 
-export const getCertificatesByUser = async (req: Request, res: Response) => {
-  const usecase = new GetCertificatesByUserUseCase(repo);
-  const result = await usecase.execute(req.params.userId);
-  res.status(200).json(result);
-};
+      const result = await this.certificateService.issueCertificate(
+        req.user.userId,
+        courseId,
+        certificateUrl
+      );
 
-export const getCertificatesByCourse = async (req: Request, res: Response) => {
-  const usecase = new GetCertificatesByCourseUseCase(repo);
-  const result = await usecase.execute(req.params.courseId);
-  res.status(200).json(result);
-};
+      new CREATED({
+        message: "Certificate issued successfully",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const deleteCertificate = async (req: Request, res: Response) => {
-  const usecase = new DeleteCertificateUseCase(repo);
-  await usecase.execute(req.params.id);
-  res.status(204).send();
-};
+  getMyCertificates = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+
+      const result = await this.certificateService.getMyCertificates(req.user.userId);
+
+      new OK({
+        message: "Get certificates success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getOne = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const result = await this.certificateService.getCertificateDetail(id);
+
+      new OK({
+        message: "Get certificate detail success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+}

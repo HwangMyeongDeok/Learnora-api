@@ -1,11 +1,15 @@
-import { Types } from "mongoose";
-import { IUser } from "./user.interface";
-import { ICourse } from "../course/course.interface";
+import { Document, Types } from "mongoose";
 
-export interface ICart {
-  _id?: Types.ObjectId;
-  user: Types.ObjectId | IUser;
-  courses: Types.ObjectId[] | ICourse[];
+export interface ICart extends Document {
+  user: Types.ObjectId;
+  courses: Types.ObjectId[];
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+export interface ICartRepository {
+  getByUser(userId: string): Promise<ICart | null>;
+  addToCart(userId: string, courseId: string): Promise<ICart>;
+  removeFromCart(userId: string, courseId: string): Promise<ICart | null>;
+  clearCart(userId: string): Promise<void>;
 }

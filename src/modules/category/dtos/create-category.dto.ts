@@ -1,6 +1,7 @@
-import { IsOptional, IsString } from "class-validator";
+import { IsString, IsNotEmpty, IsOptional, IsMongoId } from "class-validator";
 
 export class CreateCategoryDto {
+  @IsNotEmpty()
   @IsString()
   name!: string;
 
@@ -9,6 +10,6 @@ export class CreateCategoryDto {
   description?: string;
 
   @IsOptional()
-  @IsString()
+  @IsMongoId()
   parentCategory?: string;
 }

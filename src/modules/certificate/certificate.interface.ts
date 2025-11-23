@@ -1,11 +1,17 @@
-import { Types } from "mongoose";
-import { IUser } from "../user/user.interface";
-import { ICourse } from "../course/course.interface";
+import { Document, Types } from "mongoose";
 
-export interface ICertificate {
-  _id?: Types.ObjectId;
-  user: Types.ObjectId | IUser;
-  course: Types.ObjectId | ICourse;
+export interface ICertificate extends Document {
+  user: Types.ObjectId;
+  course: Types.ObjectId;
   issuedAt: Date;
-  certificateUrl: string; 
+  certificateUrl: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ICertificateRepository {
+  create(data: any): Promise<ICertificate>;
+  findByUser(userId: string): Promise<ICertificate[]>;
+  findById(id: string): Promise<ICertificate | null>;
+  findByUserAndCourse(userId: string, courseId: string): Promise<ICertificate | null>;
 }

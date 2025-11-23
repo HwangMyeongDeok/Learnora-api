@@ -1,41 +1,70 @@
-import { Request, Response } from "express";
-import { CategoryRepository } from "./category.repository";
-import { CreateCategoryUseCase } from "./create-category.usecase";
-import { GetAllCategoriesUseCase } from "./get-all-categories.usecase";
-import { GetCategoryByIdUseCase } from "./get-category-by-id.usecase";
-import { UpdateCategoryUseCase } from "./update-category.usecase";
-import { DeleteCategoryUseCase } from "./delete-category.usecase";
+import { Request, Response, NextFunction } from "express";
+import { CategoryService } from "./category.service";
+import { CREATED, OK } from "../../core/success.response";
 
-const repo = new CategoryRepository();
+export class CategoryController {
+  constructor(private readonly categoryService: CategoryService) {}
 
-export const createCategory = async (req: Request, res: Response) => {
-  const usecase = new CreateCategoryUseCase(repo);
-  const result = await usecase.execute(req.body);
-  res.status(201).json(result);
-};
+  create = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.categoryService.createCategory(req.body);
+      new CREATED({
+        message: "Category created",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const getAllCategories = async (req: Request, res: Response) => {
-  const usecase = new GetAllCategoriesUseCase(repo);
-  const result = await usecase.execute();
-  res.status(200).json(result);
-};
+  getAll = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.categoryService.getAllCategories();
+      new OK({
+        message: "Get categories success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const getCategoryById = async (req: Request, res: Response) => {
-  const usecase = new GetCategoryByIdUseCase(repo);
-  const result = await usecase.execute(req.params.id);
-  if (!result) res.status(404).json({ message: "Category not found" });
-  res.status(200).json(result);
-};
+  getOne = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const result = await this.categoryService.getCategoryById(id);
+      new OK({
+        message: "Get category success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const updateCategory = async (req: Request, res: Response) => {
-  const usecase = new UpdateCategoryUseCase(repo);
-  const result = await usecase.execute(req.params.id, req.body);
-  if (!result) res.status(404).json({ message: "Category not found" });
-  res.status(200).json(result);
-};
+  update = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const result = await this.categoryService.updateCategory(id, req.body);
+      new OK({
+        message: "Category updated",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const deleteCategory = async (req: Request, res: Response) => {
-  const usecase = new DeleteCategoryUseCase(repo);
-  await usecase.execute(req.params.id);
-  res.status(204).send();
-};
+  delete = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      await this.categoryService.deleteCategory(id);
+      new OK({
+        message: "Category deleted",
+        metadata: {},
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+}

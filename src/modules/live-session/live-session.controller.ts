@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { LiveSessionRepository } from "./live-session..repository";
+import { LiveSessionRepository } from "./live-session.repository";
 import { CreateLiveSessionUseCase } from "./create-liveSession.usecase";
 import { GetLiveSessionByIdUseCase } from "./get-liveSession-by-id.usecase";
 import { GetLiveSessionsByCourseUseCase } from "./get-liveSessions-by-course.usecase";

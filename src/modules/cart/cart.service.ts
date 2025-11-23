@@ -1,39 +1,26 @@
-// import { AddCourseDto } from "./dtos/add-course.dto"; // Import DTO nếu cần
-
-import { ICartRepository } from "../../domain/cart/cart.repositoryinterface.";
+import { ICartRepository } from "./cart.interface";
+import { NotFoundError } from "../../core/error.response";
 
 export class CartService {
   constructor(private readonly cartRepo: ICartRepository) {}
 
-  // =================================================================
-  // 1. GET CART
-  // =================================================================
   async getCart(userId: string) {
-    // Có thể thêm logic validate userId ở đây nếu cần
-    return await this.cartRepo.getByUser(userId);
+    const cart = await this.cartRepo.getByUser(userId);
+    if (!cart) return { courses: [] };
+    return cart;
   }
 
-  // =================================================================
-  // 2. ADD TO CART (Mình bổ sung thêm cho đủ bộ)
-  // =================================================================
   async addToCart(userId: string, courseId: string) {
-    // Logic cũ của add-to-cart.usecase.ts
     return await this.cartRepo.addToCart(userId, courseId);
   }
 
-  // =================================================================
-  // 3. REMOVE FROM CART
-  // =================================================================
   async removeFromCart(userId: string, courseId: string) {
-    return await this.cartRepo.removeFromCart(userId, courseId);
+    const cart = await this.cartRepo.removeFromCart(userId, courseId);
+    if (!cart) throw new NotFoundError("Cart not found");
+    return cart;
   }
 
-  // =================================================================
-  // 4. CLEAR CART
-  // =================================================================
   async clearCart(userId: string) {
     await this.cartRepo.clearCart(userId);
-    // Có thể return message success nếu muốn
-    return { message: "Cart cleared successfully" };
   }
 }

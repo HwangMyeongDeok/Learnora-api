@@ -1,34 +1,68 @@
-import { Request, Response } from "express";
-import { CartRepository } from "./cart.repository";
-import { GetCartUseCase } from "./get-cart.usecase";
-import { AddToCartUseCase } from "./add-to-cart.usecase";
-import { RemoveFromCartUseCase } from "./remove-from-cart.usecase";
-import { ClearCartUseCase } from "./clear-cart.usecase";
+import { Request, Response, NextFunction } from "express";
+import { CartService } from "./cart.service";
+import { OK, CREATED } from "../../core/success.response";
 
-const repo = new CartRepository();
+export class CartController {
+  constructor(private readonly cartService: CartService) {}
 
-export const getCart = async (req: Request, res: Response) => {
-  const usecase = new GetCartUseCase(repo);
-  const result = await usecase.execute(req.user!.userId);
-  res.status(200).json(result);
-};
+  getCart = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const result = await this.cartService.getCart(req.user.userId);
+      new OK({
+        message: "Get cart success",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const addToCart = async (req: Request, res: Response) => {
-  const usecase = new AddToCartUseCase(repo);
-  const result = await usecase.execute(req.user!.userId, req.body.courseId);
-  res.status(200).json(result);
-};
+  addToCart = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const { courseId } = req.body;
+      const result = await this.cartService.addToCart(req.user.userId, courseId);
 
-export const removeFromCart = async (req: Request, res: Response) => {
-  const usecase = new RemoveFromCartUseCase(repo);
-  const result = await usecase.execute(req.user!.userId, req.params.courseId);
-  res.status(200).json(result);
-};
+      new CREATED({
+        message: "Added to cart",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export const clearCart = async (req: Request, res: Response) => {
-  const usecase = new ClearCartUseCase(repo);
-  await usecase.execute(req.user!.userId);
-  res.status(204).send();
-};
+  removeFromCart = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      const { courseId } = req.params;
+      const result = await this.cartService.removeFromCart(req.user.userId, courseId);
 
+      new OK({
+        message: "Removed from cart",
+        metadata: result,
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
 
+  clearCart = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user || !req.user.userId) throw new Error("Unauthorized");
+      
+      await this.cartService.clearCart(req.user.userId);
+
+      new OK({
+        message: "Cart cleared",
+        metadata: {},
+      }).send(res);
+    } catch (error) {
+      next(error);
+    }
+  };
+}

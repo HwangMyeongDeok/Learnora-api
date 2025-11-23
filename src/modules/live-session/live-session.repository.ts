@@ -1,5 +1,5 @@
 import { LiveSession } from "./live-session..model";
-import { ILiveSession } from "./live-session..interface";
+import { ILiveSession } from "./live-session.interface";
 import { ILiveSessionRepository } from "../../domain/liveSession/liveSession.repository.interface";
 
 export class LiveSessionRepository implements ILiveSessionRepository {

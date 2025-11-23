@@ -1,14 +1,23 @@
-import jwt from "jsonwebtoken";
-import { v4 as uuidv4 } from "uuid";
-import { AuthModel } from "../../modules/auth/auth.model";
+import jwt from 'jsonwebtoken';
 
-export const generateTokens = async (userId: string, deviceId?: string) => {
-  const accessToken = jwt.sign({ sub: userId }, process.env.JWT_SECRET as jwt.Secret, {
-    expiresIn: process.env.JWT_ACCESS_EXPIRES_IN as jwt.SignOptions["expiresIn"],
-  });
+export const createTokenPair = async (
+  payload: object,
+  privateKey: string 
+) => {
+  try {
+    const accessToken = jwt.sign(payload, privateKey, {
+      algorithm: 'RS256', 
+      expiresIn: '15m',
+    });
 
-  const refreshToken = uuidv4();
-  await AuthModel.create({ user: userId, token: refreshToken, deviceId });
+    const refreshToken = jwt.sign(payload, privateKey, {
+      algorithm: 'RS256',
+      expiresIn: '7d',
+    });
 
-  return { accessToken, refreshToken };
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    throw error;
+  }
 };

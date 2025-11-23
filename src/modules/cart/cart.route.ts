@@ -1,20 +1,40 @@
 import { Router } from "express";
+import { CartController } from "./cart.controller";
+import { CartService } from "./cart.service";
+import { CartRepository } from "./cart.repository";
 import { isAuthenticated } from "../../middleware/isAuthenticated";
-import {
-  getCart,
-  addToCart,
-  removeFromCart,
-  clearCart,
-} from "./cart.controller";
 import { validateMiddleware } from "../../middleware/validation";
-import { AddCourseDto } from "./dtos/add-course.dto";
-import { RemoveCourseDto } from "./dtos/remove-course.dto";
+import { AddToCartDto } from "./dtos/add-to-cart.dto";
 
 const router = Router();
 
-router.get("/", isAuthenticated, getCart);
-router.post("/add", isAuthenticated, validateMiddleware(AddCourseDto),addToCart);
-router.delete("/remove/:courseId", isAuthenticated, validateMiddleware(RemoveCourseDto),removeFromCart);
-router.delete("/clear", isAuthenticated, clearCart);
+const cartRepo = new CartRepository();
+const cartService = new CartService(cartRepo);
+const cartController = new CartController(cartService);
+
+
+router.get(
+    "/", 
+    isAuthenticated, 
+    cartController.getCart
+);
+router.post(
+    "/add", 
+    isAuthenticated, 
+    validateMiddleware(AddToCartDto), 
+    cartController.addToCart
+);
+
+router.delete(
+    "/remove/:courseId", 
+    isAuthenticated, 
+    cartController.removeFromCart
+);
+
+router.delete(
+    "/clear", 
+    isAuthenticated, 
+    cartController.clearCart
+);
 
 export default router;

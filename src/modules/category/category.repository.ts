@@ -1,25 +1,31 @@
-import { ICategory } from "./category.interface";
-import { ICategoryRepository } from "../../domain/category/category.repositoryinterface.";
-import { Category } from "./category.model";
+import { CategoryModel } from "./category.model";
+import { ICategory, ICategoryRepository } from "./category.interface";
 
 export class CategoryRepository implements ICategoryRepository {
-  async create(data: Partial<ICategory>): Promise<ICategory> {
-    return await Category.create(data);
+  
+  async create(data: any): Promise<ICategory> {
+    return await CategoryModel.create(data);
   }
 
   async findAll(): Promise<ICategory[]> {
-    return await Category.find().populate("parentCategory");
+    return await CategoryModel.find()
+      .populate("parentCategory", "name slug")
+      .lean<ICategory[]>();
   }
 
   async findById(id: string): Promise<ICategory | null> {
-    return await Category.findById(id).populate("parentCategory");
+    return await CategoryModel.findById(id).lean<ICategory>();
   }
 
-  async update(id: string, data: Partial<ICategory>): Promise<ICategory | null> {
-    return await Category.findByIdAndUpdate(id, data, { new: true });
+  async findBySlug(slug: string): Promise<ICategory | null> {
+    return await CategoryModel.findOne({ slug }).lean<ICategory>();
+  }
+
+  async update(id: string, data: any): Promise<ICategory | null> {
+    return await CategoryModel.findByIdAndUpdate(id, data, { new: true }).lean<ICategory>();
   }
 
   async delete(id: string): Promise<void> {
-    await Category.findByIdAndDelete(id);
+    await CategoryModel.findByIdAndDelete(id);
   }
 }

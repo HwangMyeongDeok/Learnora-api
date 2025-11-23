@@ -1,5 +1,5 @@
 import { IsDateString, IsEnum, IsString } from "class-validator";
-import { LiveSessionStatus } from "../live-session..interface";
+import { LiveSessionStatus } from "../live-session.interface";
 
 export class CreateLiveSessionDto {
   @IsString()

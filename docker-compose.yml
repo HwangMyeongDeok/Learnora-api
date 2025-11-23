@@ -1,11 +1,8 @@
 version: '3.9'
 
 services:
-  # ================== BACKEND ==================
   lms-backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: lms-backend
     ports:
       - "3000:3000"
@@ -13,31 +10,52 @@ services:
       - redis
       - rabbitmq
     env_file:
-      - .env
+      - .env 
+    environment:
+      - REDIS_HOST=redis
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+    command: npm run dev
     restart: unless-stopped
     networks:
       - backend-network
 
-  # ================== RABBITMQ ==================
+  lms-worker:
+    build: .
+    container_name: lms-worker
+    depends_on:
+      - redis
+      - rabbitmq
+    env_file:
+      - .env 
+    environment:
+      - REDIS_HOST=redis
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run worker 
+    restart: unless-stopped
+    networks:
+      - backend-network
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: lms-rabbitmq
     ports:
-      - "5672:5672"    # AMQP
-      - "15672:15672"  # Management UI
+      - "5672:5672"   
+      - "15672:15672" 
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin123
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     restart: unless-stopped
     networks:
       - backend-network
 
-  # ================== REDIS ==================
   redis:
     image: redis:7
     container_name: lms-redis
@@ -50,10 +68,21 @@ services:
     networks:
       - backend-network
 
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: lms-redis-gui
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    depends_on:
+      - redis
+    networks:
+      - backend-network
+
 networks:
   backend-network:
-    name: backend-network
-    
+
 volumes:
   redis-data:
   rabbitmq_data:
